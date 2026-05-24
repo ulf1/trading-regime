@@ -45,6 +45,12 @@ resource "google_cloud_run_v2_job" "datasync" {
           name  = "GCS_BUCKET_NAME"
           value = google_storage_bucket.market_data.name
         }
+        resources {
+          limits = {
+            memory = "2Gi"
+            cpu    = "1"
+          }
+        }
       }
       service_account = google_service_account.job_sa.email
     }
@@ -80,6 +86,12 @@ resource "google_cloud_run_v2_job" "tickerchecker" {
         env {
           name  = "GCS_BUCKET_NAME"
           value = google_storage_bucket.market_data.name
+        }
+        resources {
+          limits = {
+            memory = "2Gi"
+            cpu    = "1"
+          }
         }
       }
       service_account = google_service_account.job_sa.email
@@ -117,6 +129,12 @@ resource "google_cloud_run_v2_job" "findticker" {
           name  = "GCS_BUCKET_NAME"
           value = google_storage_bucket.market_data.name
         }
+        resources {
+          limits = {
+            memory = "2Gi"
+            cpu    = "1"
+          }
+        }
       }
       service_account = google_service_account.job_sa.email
     }
@@ -152,6 +170,12 @@ resource "google_cloud_run_v2_job" "initialdownloader" {
         env {
           name  = "GCS_BUCKET_NAME"
           value = google_storage_bucket.market_data.name
+        }
+        resources {
+          limits = {
+            memory = "2Gi"
+            cpu    = "1"
+          }
         }
       }
       service_account = google_service_account.job_sa.email

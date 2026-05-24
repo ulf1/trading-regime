@@ -5,7 +5,8 @@ import pandas as pd
 from google.cloud import storage
 from database import init_db, insert_initial_data
 from scraper import scrape_new_tickers, fetch_historical_data
-# from default_tickers import DEFAULT_TICKERS
+from default_tickers import DEFAULT_TICKERS
+import random
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -57,8 +58,8 @@ def main():
     logger.info(f"Scraped {len(scraped_tickers)} most active tickers.")
     
     new_tickers = [t for t in scraped_tickers if t not in existing_tickers]
-    # new_tickers = new_tickers + [t for t in DEFAULT_TICKERS if t not in existing_tickers]
-    # new_tickers = list(set(new_tickers))
+    new_tickers = new_tickers + random.choice([t for t in DEFAULT_TICKERS if t not in existing_tickers])[:50]
+    new_tickers = list(set(new_tickers))
     
     if not new_tickers:
         logger.info("No new tickers discovered. Exiting cleanly.")
