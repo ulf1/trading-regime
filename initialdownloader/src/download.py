@@ -13,7 +13,7 @@ def download_missing_data(ticker: str, max_retries: int = 3) -> pd.DataFrame:
     for attempt in range(max_retries):
         try:
             logger.info(f"Downloading data for {ticker}, attempt {attempt + 1}")
-            data = yf.download([ticker], period="max", interval="1d", auto_adjust=False, threads=False, progress=False)
+            data = yf.download([ticker], period="9y", interval="1d", auto_adjust=False, threads=False, progress=False)
             
             if data.empty or 'Adj Close' not in data.columns:
                 logger.warning(f"No data downloaded for {ticker}.")

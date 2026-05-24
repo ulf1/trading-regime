@@ -162,7 +162,7 @@ def fetch_historical_data(ticker: str) -> pd.DataFrame:
     logger.info(f"Fetching historical data for {ticker}...")
     try:
         # Pass ticker as string instead of a list to yf.download to obtain a standard single-index DataFrame
-        data = yf.download(ticker, period="max", interval="1d", auto_adjust=False, threads=False, progress=False)
+        data = yf.download(ticker, period="9y", interval="1d", auto_adjust=False, threads=False, progress=False)
         if data.empty:
             return pd.DataFrame()
             
