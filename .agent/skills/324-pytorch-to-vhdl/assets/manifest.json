@@ -1,0 +1,38 @@
+{
+  "name": "pytorch_to_vhdl_manifest",
+  "version": "1.0.0",
+  "description": "Knowledge base manifest for PyTorch to VHDL generation rules and quantization strategies.",
+  "knowledge_base": [
+    "assets/layers.json"
+  ],
+  "logic_examples": [
+    "examples/fixed_point_converter.py",
+    "examples/vhdl_model.vhd",
+    "examples/vhdl_testbench.vhd",
+    "examples/ghdl_simulation.sh"
+  ],
+  "quantization_rules": {
+    "signed_q8_8": {
+      "bits": 16,
+      "frac_bits": 8,
+      "range": [-128.0, 127.996],
+      "precision": 0.0039
+    },
+    "unsigned_q1_15": {
+      "bits": 16,
+      "frac_bits": 15,
+      "range": [0.0, 1.99996],
+      "precision": 0.00003
+    }
+  },
+  "vhdl_conventions": {
+    "library": "IEEE",
+    "use": ["std_logic_1164.all", "numeric_std.all"],
+    "ports": {
+      "clk": "std_logic",
+      "reset": "std_logic",
+      "start": "std_logic",
+      "done": "std_logic"
+    }
+  }
+}

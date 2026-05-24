@@ -1,0 +1,25 @@
+{
+  "name": "high_performance_pytorch",
+  "version": "1.0.0",
+  "frameworks": ["torch", "torchvision", "pydantic", "optuna"],
+  "standard_layers": {
+    "linear": "torch.nn.Linear",
+    "conv2d": "torch.nn.Conv2d",
+    "batchnorm1d": "torch.nn.BatchNorm1d",
+    "relu": "torch.nn.ReLU",
+    "dropout": "torch.nn.Dropout"
+  },
+  "initialization_strategies": {
+    "kaiming_normal": "torch.nn.init.kaiming_normal_",
+    "kaiming_uniform": "torch.nn.init.kaiming_uniform_",
+    "xavier_normal": "torch.nn.init.xavier_normal_",
+    "constant": "torch.nn.init.constant_"
+  },
+  "optimization_best_practices": {
+    "mixed_precision": "torch.amp.autocast",
+    "grad_scaler": "torch.amp.GradScaler",
+    "compile": "torch.compile",
+    "zero_grad_params": {"set_to_none": true},
+    "dataloader_params": {"pin_memory": true, "num_workers": 4}
+  }
+}

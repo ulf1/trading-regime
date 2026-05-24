@@ -1,0 +1,24 @@
+{
+  "name": "cli_architect",
+  "version": "1.1.1",
+  "description": "High-performance Python CLI engineering framework with deep unit testing integration.",
+  "knowledge_base": {
+    "assets": [
+      "assets/cli_frameworks.json",
+      "assets/common_pitfalls.json",
+      "assets/testing_patterns.json"
+    ]
+  },
+  "examples": [
+    "examples/click_patterns.py",
+    "examples/typer_patterns.py",
+    "examples/error_handling.py",
+    "examples/rich_ui_formatting.py",
+    "examples/cli_skeleton_template.py",
+    "examples/pyproject_template.toml",
+    "examples/testing_click.py",
+    "examples/testing_typer.py",
+    "examples/testing_rich.py",
+    "examples/testing_mocks.py"
+  ]
+}

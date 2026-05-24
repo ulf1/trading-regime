@@ -1,0 +1,22 @@
+{
+  "name": "pytorch_hamilton_unittest",
+  "version": "1.0.0",
+  "test_framework": "pytest",
+  "precision_settings": {
+    "default_dtype": "torch.float64",
+    "assertion_tolerance": 1e-12
+  },
+  "assertion_targets": {
+    "sigma": "strictly positive (>0)",
+    "transition_matrix": "row-stochastic (sums to 1.0, non-negative)",
+    "filtered_probabilities": "stochastic (sums to 1.0, non-negative)",
+    "sorting": "mu in strictly descending order"
+  },
+  "coverage_targets": {
+    "reparameterization": 100,
+    "forward_filter": 100,
+    "parameter_sorting": 100,
+    "prediction": 100,
+    "error_handling": 100
+  }
+}

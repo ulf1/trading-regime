@@ -1,0 +1,23 @@
+{
+  "name": "high_performance_pandas",
+  "version": "1.0.0",
+  "recommended_minimum_version": "2.0.0",
+  "optimization_settings": {
+    "copy_on_write": "pd.options.mode.copy_on_write = True",
+    "pyarrow_backend": "dtype_backend='pyarrow'"
+  },
+  "standard_nullable_types": {
+    "integer": "Int64",
+    "boolean": "boolean",
+    "string": "string"
+  },
+  "io_backends": {
+    "parquet": "pyarrow",
+    "excel": "openpyxl"
+  },
+  "vectorized_methods": {
+    "conditional": "np.select",
+    "binary_conditional": "np.where",
+    "mapping": "df.map"
+  }
+}

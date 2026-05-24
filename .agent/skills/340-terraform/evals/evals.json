@@ -1,0 +1,22 @@
+[
+  { "query": "Why did my terraform apply fail?", "should_trigger": true },
+  { "query": "Translate this Pulumi stack to Terraform", "should_trigger": true },
+  { "query": "Write an AWS provider config using for_each", "should_trigger": true },
+  { "query": "How do I import an existing S3 bucket in Terraform?", "should_trigger": true },
+  { "query": "My terraform plan shows a force replacement. What should I do?", "should_trigger": true },
+  { "query": "Review this HCL code and optimize counts to for_each", "should_trigger": true },
+  { "query": "How to manage secrets securely in Terraform?", "should_trigger": true },
+  { "query": "Write a root module configuration for dev and prod environments", "should_trigger": true },
+  { "query": "Explain how terraform.lock.hcl is generated and why I should commit it", "should_trigger": true },
+  { "query": "Can you write a Sentinel or OPA policy for Terraform?", "should_trigger": true },
+  { "query": "How do I launch an EC2 instance using the AWS CLI?", "should_trigger": false },
+  { "query": "Write a Python script using boto3 to upload to S3", "should_trigger": false },
+  { "query": "Explain the differences between AWS S3 and Azure Blob storage conceptually", "should_trigger": false },
+  { "query": "How do I configure K8s deployments with helm?", "should_trigger": false },
+  { "query": "Can you write a dockerfile for a Node.js app?", "should_trigger": false },
+  { "query": "Explain cloud computing basics", "should_trigger": false },
+  { "query": "How do I write an Ansible playbook for configuring Nginx?", "should_trigger": false },
+  { "query": "Write a bash script to parse JSON", "should_trigger": false },
+  { "query": "How do I set up a PostgreSQL DB locally on Ubuntu?", "should_trigger": false },
+  { "query": "Write a cloudformation template for a VPC", "should_trigger": false }
+]

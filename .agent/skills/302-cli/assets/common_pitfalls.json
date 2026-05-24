@@ -1,0 +1,37 @@
+[
+  {
+    "pitfall": "Using `sys.argv` directly",
+    "problem": "Fragile, hard to test",
+    "solution": "Use click/typer decorators"
+  },
+  {
+    "pitfall": "No help text",
+    "problem": "Users confused",
+    "solution": "Add `help=` parameter to all options"
+  },
+  {
+    "pitfall": "Hardcoded paths",
+    "problem": "Not portable",
+    "solution": "Use `pathlib.Path` or `os.expanduser()`"
+  },
+  {
+    "pitfall": "Silent failures",
+    "problem": "Hard to debug",
+    "solution": "Always provide error messages"
+  },
+  {
+    "pitfall": "No exit codes",
+    "problem": "Scripts can't be chained",
+    "solution": "Use `sys.exit(code)` appropriately"
+  },
+  {
+    "pitfall": "Mixed print & logging",
+    "problem": "Inconsistent output",
+    "solution": "Use logging or rich consistently"
+  },
+  {
+    "pitfall": "No version option",
+    "problem": "Users unsure what they have",
+    "solution": "Add `@click.version_option()`"
+  }
+]

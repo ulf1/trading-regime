@@ -1,0 +1,46 @@
+{
+  "name": "high_performance_numpy",
+  "version": "1.0.0",
+  "recommended_minimum_version": "1.20.0",
+  "standard_dtypes": {
+    "boolean": "np.bool_",
+    "int8": "np.int8",
+    "int32": "np.int32",
+    "int64": "np.int64",
+    "uint8": "np.uint8",
+    "float32": "np.float32",
+    "float64": "np.float64"
+  },
+  "creation_factories": {
+    "zeros": "np.zeros",
+    "ones": "np.ones",
+    "empty": "np.empty",
+    "full": "np.full",
+    "arange": "np.arange",
+    "linspace": "np.linspace"
+  },
+  "vectorized_reductions": {
+    "sum": "np.sum",
+    "max": "np.max",
+    "min": "np.min",
+    "mean": "np.mean",
+    "std": "np.std",
+    "var": "np.var"
+  },
+  "random_generator_api": {
+    "init": "np.random.default_rng",
+    "uniform": "rng.random",
+    "integers": "rng.integers",
+    "normal": "rng.standard_normal",
+    "choice": "rng.choice",
+    "shuffle": "rng.shuffle"
+  },
+  "nan_aware_operations": {
+    "check": "np.isnan",
+    "to_num": "np.nan_to_num",
+    "nansum": "np.nansum",
+    "nanmean": "np.nanmean",
+    "nanmax": "np.nanmax",
+    "nanstd": "np.nanstd"
+  }
+}

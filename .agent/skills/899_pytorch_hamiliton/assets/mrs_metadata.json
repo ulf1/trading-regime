@@ -1,0 +1,28 @@
+{
+  "name": "pytorch_hamilton",
+  "version": "1.0.0",
+  "frameworks": [
+    "torch"
+  ],
+  "model_type": "Markov Regime-Switching",
+  "equations": {
+    "reparameterization_sigma": "sigma = exp(raw_sigma)",
+    "reparameterization_transition_matrix": "transition_matrix = softmax(raw_trans_mat, dim=2)",
+    "prediction_step": "xi_{t|t-1} = xi_{t-1|t-1} * transition_matrix",
+    "emission_step": "eta_t = (2 * pi * sigma^2)^(-0.5) * exp(-(y_t - mu)^2 / (2 * sigma^2))",
+    "update_step": "joint = xi_{t|t-1} * eta_t; xi_{t|t} = joint / sum(joint)"
+  },
+  "numerical_stability": {
+    "default_dtype": "torch.float64",
+    "epsilon_padding": 1e-12,
+    "unconstrained_initial_state": "uniform"
+  },
+  "state_identification": {
+    "default_sorting": "descending_by_mean",
+    "state_labels": {
+      "0": "bull (high-mean)",
+      "1": "neutral (mid-mean)",
+      "2": "bear (low-mean)"
+    }
+  }
+}

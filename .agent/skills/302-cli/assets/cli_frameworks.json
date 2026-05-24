@@ -1,0 +1,44 @@
+[
+  {
+    "feature": "Learning curve",
+    "click": "Low",
+    "typer": "Low",
+    "argparse": "Medium"
+  },
+  {
+    "feature": "Type hints",
+    "click": "No",
+    "typer": "Yes*",
+    "argparse": "No"
+  },
+  {
+    "feature": "Built-in",
+    "click": "No",
+    "typer": "No",
+    "argparse": "Yes"
+  },
+  {
+    "feature": "Subcommands",
+    "click": "Yes",
+    "typer": "Yes",
+    "argparse": "Yes"
+  },
+  {
+    "feature": "Output formatting",
+    "click": "Basic",
+    "typer": "Basic",
+    "argparse": "Basic"
+  },
+  {
+    "feature": "Testing",
+    "click": "Excellent",
+    "typer": "Good",
+    "argparse": "Good"
+  },
+  {
+    "feature": "Modern",
+    "click": "Yes",
+    "typer": "Very",
+    "argparse": "No"
+  }
+]

@@ -1,0 +1,38 @@
+{
+  "docs": {
+    "module": "SKILL.md",
+    "examples": [
+      {
+        "file": "examples/training_pipeline.py",
+        "description": "Production-grade, end-to-end PyTorch training pipeline using AMP and torch.compile."
+      }
+    ],
+    "assets": [
+      {
+        "file": "assets/torch_metadata.json",
+        "description": "Machine-readable knowledge base for layers, inits, and optimizations."
+      }
+    ],
+    "references": [
+      {
+        "file": "references/training-loop.md",
+        "description": "Annotated production training loop with AMP, gradient accumulation, early stopping, and checkpointing."
+      },
+      {
+        "file": "references/performance.md",
+        "description": "Profiling, torch.compile, fused kernels, multi-GPU scaling (DDP), and inference optimization."
+      }
+    ]
+  },
+  "capabilities": {
+    "training": ["Mixed Precision", "Compilation", "Data Loading Optimization", "Gradient Accumulation", "Early Stopping", "DDP Scaling"],
+    "modeling": ["Custom nn.Module", "Pydantic-based configuration", "Standardized weight initialization", "Shape Documentation"]
+  },
+  "best_practices": [
+    "Use torch.amp instead of torch.cuda.amp",
+    "Always set pin_memory=True in Dataloaders",
+    "Always set set_to_none=True in optimizer.zero_grad",
+    "Always save state_dict instead of full model objects",
+    "Pass map_location when loading checkpoints"
+  ]
+}

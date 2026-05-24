@@ -1,0 +1,40 @@
+{
+  "docs": {
+    "module": "SKILL.md",
+    "examples": [
+      {
+        "file": "examples/test_numpy_pipeline.py",
+        "description": "Production-grade pytest test suite demonstrating advanced assertions, shape/dtype verification, boundary conditions, and floating-point tolerance parameters."
+      }
+    ],
+    "assets": [
+      {
+        "file": "assets/unittest_metadata.json",
+        "description": "Machine-readable knowledge base for NumPy testing modules and standard assertions."
+      }
+    ]
+  },
+  "capabilities": {
+    "assertions": [
+      "Exact Array Equality",
+      "Floating-point Tolerances",
+      "Relative and Absolute Bounds"
+    ],
+    "invariants": [
+      "Shape Verification",
+      "Dtype Consistency Checks",
+      "Side-Effect and Mutation Auditing"
+    ],
+    "edge_cases": [
+      "NaN/Inf handling verification",
+      "Empty or Single-element boundaries",
+      "Non-contiguous/Strided memory layout verification"
+    ]
+  },
+  "best_practices": [
+    "Never use plain assert elements with == on arrays",
+    "Always set isolated, reproducible rng seeds per test method",
+    "Explicitly justify floating-point tolerance bounds in comments",
+    "Test on non-contiguous arrays by transposing or slicing"
+  ]
+}

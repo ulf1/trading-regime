@@ -1,0 +1,102 @@
+[
+  {
+    "comment": "Direct creation request",
+    "query": "Create a skill for running database migrations safely.",
+    "should_trigger": true
+  },
+  {
+    "comment": "Oblique — says 'make' not 'skill'",
+    "query": "I want to package our deployment runbook so Antigravity can follow it automatically. How do I do that?",
+    "should_trigger": true
+  },
+  {
+    "comment": "Validation request",
+    "query": "Check my SKILL.md — is it formatted correctly?",
+    "should_trigger": true
+  },
+  {
+    "comment": "Audit request",
+    "query": "Review the skill in .agent/skills/pdf-extractor/ and tell me if anything's wrong.",
+    "should_trigger": true
+  },
+  {
+    "comment": "Triggering problem",
+    "query": "My skill isn't activating when I ask about git commits. How do I fix the description?",
+    "should_trigger": true
+  },
+  {
+    "comment": "Scaffold request with no domain knowledge",
+    "query": "Scaffold a skill called code-reviewer with a placeholder description.",
+    "should_trigger": true
+  },
+  {
+    "comment": "Eval request",
+    "query": "Run trigger evals on my csv-analyzer skill using the evals.json file I wrote.",
+    "should_trigger": true
+  },
+  {
+    "comment": "Description improvement",
+    "query": "My skill's description is 'Process CSV files.' Can you make it better?",
+    "should_trigger": true
+  },
+  {
+    "comment": "Write SKILL.md directly",
+    "query": "Write a SKILL.md for a skill that formats git commit messages using Conventional Commits.",
+    "should_trigger": true
+  },
+  {
+    "comment": "Oblique — asks about sharing workflow with team",
+    "query": "I keep explaining the same deployment steps to Antigravity over and over. Is there a way to save them?",
+    "should_trigger": true
+  },
+  {
+    "comment": "Near-miss — about MCP, not skills",
+    "query": "How do I connect Antigravity to our GitHub repository using MCP?",
+    "should_trigger": false
+  },
+  {
+    "comment": "Near-miss — about Rules, not Skills",
+    "query": "I want Antigravity to always use snake_case for Python variables. Where do I put that instruction?",
+    "should_trigger": false
+  },
+  {
+    "comment": "Near-miss — debugging code, not skills",
+    "query": "Debug this Python script — it's throwing a KeyError on line 42.",
+    "should_trigger": false
+  },
+  {
+    "comment": "Near-miss — code review (not about Skills)",
+    "query": "Review my pull request for style issues and potential bugs.",
+    "should_trigger": false
+  },
+  {
+    "comment": "Clearly unrelated",
+    "query": "What's a good recipe for banana bread?",
+    "should_trigger": false
+  },
+  {
+    "comment": "Near-miss — Workflows, not Skills",
+    "query": "Create a /deploy workflow that runs tests before pushing to production.",
+    "should_trigger": false
+  },
+  {
+    "comment": "Near-miss — writing a shell script (not a Skill)",
+    "query": "Write a bash script that validates my SQL schema file.",
+    "should_trigger": false
+  },
+  {
+    "comment": "Ambiguous — could go either way; skill should trigger to offer help",
+    "query": "How do I extend what Antigravity can do?",
+    "should_trigger": true
+  },
+  {
+    "comment": "Near-miss — asking about Antigravity docs, not creating skills",
+    "query": "What's the difference between Rules and Workflows in Antigravity?",
+    "should_trigger": false
+  },
+  {
+    "comment": "Oblique — 'teach' framing",
+    "query": "I want to teach Antigravity how to set up a new FastAPI project exactly the way my team does it.",
+    "should_trigger": true
+  }
+]

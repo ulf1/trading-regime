@@ -1,0 +1,40 @@
+{
+  "docs": {
+    "module": "SKILL.md",
+    "examples": [
+      {
+        "file": "examples/high_performance_computation.py",
+        "description": "Production-grade, end-to-end high-performance NumPy pipeline showcasing advanced vectorization, broadcasting, and GIL-releasing multithreading."
+      }
+    ],
+    "assets": [
+      {
+        "file": "assets/numpy_metadata.json",
+        "description": "Machine-readable knowledge base for NumPy types, standard array attributes, and operations."
+      }
+    ]
+  },
+  "capabilities": {
+    "computation": [
+      "Vectorization",
+      "Broadcasting",
+      "Einsum Contractions",
+      "Fast Sorting and Partitioning"
+    ],
+    "memory_optimization": [
+      "Zero-copy Slicing and Transposition",
+      "Memory-mapped File Storage (memmap)",
+      "In-place Output Allocation (out=)"
+    ],
+    "parallelism": [
+      "GIL Releasing Computations",
+      "ThreadPoolExecutor for concurrent execution"
+    ]
+  },
+  "best_practices": [
+    "Always specify explicit dtypes to avoid silent float64 upcasting",
+    "Never loop over arrays using Python for-loops",
+    "Use np.random.default_rng() instead of np.random.seed()",
+    "Use np.argpartition() instead of np.argsort() when selecting top-k elements"
+  ]
+}

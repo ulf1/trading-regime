@@ -1,0 +1,31 @@
+{
+  "docs": {
+    "module": "SKILL.md",
+    "examples": [
+      {
+        "file": "examples/test_mrs_model.py",
+        "description": "Comprehensive Pytest suite validating shapes, transformations, sorting, and edge cases of the vectorized Hamilton Filter."
+      }
+    ],
+    "assets": [
+      {
+        "file": "assets/test_metadata.json",
+        "description": "Machine-readable unit test configurations, assertion boundaries, and mock targets."
+      }
+    ]
+  },
+  "capabilities": {
+    "verification": [
+      "Reparameterization Bound Verification",
+      "Tensor Shape Compliance Audits",
+      "Permutation Equivariance Checking",
+      "Robust Numerical Stability Assertions"
+    ]
+  },
+  "best_practices": [
+    "Always run assertions with high precision float64 comparison tolerances",
+    "Use pytest.raises for robust input validation testing",
+    "Trace and verify permutation correctness on multidimensional tensors manually in tests",
+    "Ensure predicted probability distribution invariants sum strictly to 1.0"
+  ]
+}

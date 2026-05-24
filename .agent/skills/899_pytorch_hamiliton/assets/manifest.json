@@ -1,0 +1,36 @@
+{
+  "docs": {
+    "module": "SKILL.md",
+    "examples": [
+      {
+        "file": "examples/mrs_model.py",
+        "description": "High-performance vectorized batched Markov Regime-Switching model and Hamilton Filter in PyTorch."
+      }
+    ],
+    "assets": [
+      {
+        "file": "assets/mrs_metadata.json",
+        "description": "Machine-readable configuration, mathematical definitions, and numerical stability practices."
+      }
+    ]
+  },
+  "capabilities": {
+    "estimation": [
+      "Batched Hamilton Filtering",
+      "Negative Log-Likelihood Minimization",
+      "Automatic Differentiation"
+    ],
+    "modeling": [
+      "Markov Regime-Switching",
+      "Vectorized Tensor Operations",
+      "Reparameterization Constraints",
+      "Regime Identifiability Sorting"
+    ]
+  },
+  "best_practices": [
+    "Use torch.float64 for numerical stability in Likelihood calculations",
+    "Apply softmax parameterization on raw_trans_mat to guarantee stochastic transition matrices",
+    "Apply exponential transformation on raw_sigma to guarantee positive variances",
+    "Run regime sorting (sort_regimes) after training to solve the label-switching/identifiability problem"
+  ]
+}

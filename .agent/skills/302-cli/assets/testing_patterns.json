@@ -1,0 +1,37 @@
+{
+  "testing_frameworks": {
+    "click": {
+      "runner": "click.testing.CliRunner",
+      "method": "runner.invoke(cli, args)",
+      "isolation": "runner.isolated_filesystem()"
+    },
+    "typer": {
+      "runner": "typer.testing.CliRunner",
+      "method": "runner.invoke(app, args)",
+      "isolation": "Inherited from Click"
+    }
+  },
+  "best_practices": [
+    {
+      "area": "Business Logic",
+      "guideline": "Separate core logic from CLI wrappers into pure Python functions."
+    },
+    {
+      "area": "Rich Output",
+      "guideline": "Use Console(record=True) and export_text() to strip ANSI for assertions."
+    },
+    {
+      "area": "External Deps",
+      "guideline": "Mock external services using unittest.mock.patch or pytest-mock."
+    },
+    {
+      "area": "Coverage",
+      "guideline": "Use @pytest.mark.parametrize for valid/invalid input branches."
+    }
+  ],
+  "exit_codes": {
+    "0": "Success (Standard POSIX)",
+    "1+": "Failure / Errors",
+    "2": "Click/Typer usage/validation error"
+  }
+}

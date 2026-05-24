@@ -1,0 +1,25 @@
+{
+  "name": "numpy_unit_testing",
+  "version": "1.0.0",
+  "frameworks": ["numpy.testing", "pytest"],
+  "standard_assertions": {
+    "exact_equality": "numpy.testing.assert_array_equal",
+    "approximate_equality": "numpy.testing.assert_allclose",
+    "less_than": "numpy.testing.assert_array_less",
+    "scalar_equality": "numpy.testing.assert_equal",
+    "exception_verification": "numpy.testing.assert_raises"
+  },
+  "recommended_tolerances": {
+    "float32_default": {
+      "rtol": 1e-5,
+      "atol": 1e-8
+    },
+    "float64_default": {
+      "rtol": 1e-12,
+      "atol": 1e-15
+    }
+  },
+  "common_test_fixtures": {
+    "random_generator": "np.random.default_rng(seed)"
+  }
+}

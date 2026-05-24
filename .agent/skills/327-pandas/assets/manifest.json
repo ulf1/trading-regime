@@ -1,0 +1,40 @@
+{
+  "docs": {
+    "module": "SKILL.md",
+    "examples": [
+      {
+        "file": "examples/high_performance_pandas.py",
+        "description": "Production-grade, end-to-end pandas data processing pipeline demonstrating method chaining, memory optimization, category typing, and robust validations."
+      }
+    ],
+    "assets": [
+      {
+        "file": "assets/pandas_metadata.json",
+        "description": "Machine-readable knowledge base for pandas standard types, optimization settings, and backend parameters."
+      }
+    ]
+  },
+  "capabilities": {
+    "pipeline_design": [
+      "Method Chaining",
+      "Custom transformations via .pipe()",
+      "Time Series Resampling and Timezones"
+    ],
+    "memory_optimization": [
+      "Dtype Downcasting",
+      "Categorical Dtypes for low-cardinality values",
+      "Nullable PyArrow backends"
+    ],
+    "correctness": [
+      "Merge Validation (1:1, 1:m)",
+      "Avoiding SettingWithCopyWarning via CoW rules",
+      "Standard index management"
+    ]
+  },
+  "best_practices": [
+    "Never mutate slices of DataFrames without an explicit copy",
+    "Never loop over rows with iterrows for computation",
+    "Specify explicit usecols and dtypes during I/O reads",
+    "Enable Copy-on-Write for future compatibility with pandas 3.0"
+  ]
+}

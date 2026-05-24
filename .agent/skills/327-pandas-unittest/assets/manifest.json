@@ -1,0 +1,40 @@
+{
+  "docs": {
+    "module": "SKILL.md",
+    "examples": [
+      {
+        "file": "examples/test_pandas_pipeline.py",
+        "description": "Production-grade, end-to-end pandas testing suite demonstrating assert_frame_equal, mock I/O, schemas, and edge case parameters."
+      }
+    ],
+    "assets": [
+      {
+        "file": "assets/unittest_metadata.json",
+        "description": "Machine-readable knowledge base for pandas testing frameworks, assertions, and validation schemas."
+      }
+    ]
+  },
+  "capabilities": {
+    "assertions": [
+      "DataFrame and Series Equality",
+      "Floating-point Tolerances in frames",
+      "Dtype and Index Type Checks"
+    ],
+    "ETL_validation": [
+      "Pure function transform assertions",
+      "Null checking and schema validation",
+      "Mocking CSV/Parquet external I/O"
+    ],
+    "edge_cases": [
+      "Empty DataFrames and Single Rows",
+      "Duplicate indexes and row deduplications",
+      "Time Series lag and timezone invariants"
+    ]
+  },
+  "best_practices": [
+    "Never use plain assert elements with == or .equals() on DataFrames",
+    "Always separate data transformations from raw disk read/write files in tests",
+    "Define small, minimal inline fixtures instead of loading production samples",
+    "Mock external I/O operations using unittest.mock patch"
+  ]
+}

@@ -1,0 +1,37 @@
+{
+    "name": "fastapi",
+    "description": "High-performance FastAPI orchestration framework for building production-grade asynchronous web APIs.",
+    "version": "1.2.0",
+    "knowledge_base": [
+        {
+            "path": "assets/manifest.json",
+            "description": "Plugin manifest declaring internal structure."
+        },
+        {
+            "path": "assets/error_mapping.json",
+            "description": "Standardized HTTP error mappings for service-layer exception translation."
+        }
+    ],
+    "examples": [
+        {
+            "path": "examples/service_layer.py",
+            "description": "Implementation of the Service Layer Pattern for strict logic isolation."
+        },
+        {
+            "path": "examples/concurrency.py",
+            "description": "Expert patterns for sync vs async I/O and CPU-bound task management."
+        },
+        {
+            "path": "examples/exceptions.py",
+            "description": "Global exception handling and service-level error mapping."
+        },
+        {
+            "path": "examples/lifecycle.py",
+            "description": "Modern lifespan context management and resource dependency injection."
+        },
+        {
+            "path": "examples/unit_testing.py",
+            "description": "Comprehensive tests showcasing TestClient, pytest-asyncio, dependency overrides, and fixtures."
+        }
+    ]
+}

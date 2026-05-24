@@ -1,0 +1,23 @@
+{
+  "name": "pandas_unit_testing",
+  "version": "1.0.0",
+  "frameworks": ["pandas.testing", "pytest", "unittest.mock"],
+  "standard_assertions": {
+    "frame_equality": "pandas.testing.assert_frame_equal",
+    "series_equality": "pandas.testing.assert_series_equal",
+    "index_equality": "pandas.testing.assert_index_equal"
+  },
+  "recommended_assertion_parameters": {
+    "check_dtype": true,
+    "check_index_type": true,
+    "check_like": false,
+    "rtol": 1e-5,
+    "atol": 1e-8
+  },
+  "mocking_targets": {
+    "csv_reader": "pandas.read_csv",
+    "parquet_reader": "pandas.read_parquet",
+    "csv_writer": "pandas.DataFrame.to_csv",
+    "parquet_writer": "pandas.DataFrame.to_parquet"
+  }
+}

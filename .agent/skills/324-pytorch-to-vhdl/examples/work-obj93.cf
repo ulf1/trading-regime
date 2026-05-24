@@ -1,0 +1,7 @@
+v 4
+file . "vhdl_testbench.vhd" "0154fd914ed6cfbbab6ff18caf0ed0644dd21679" "20260407144522.328":
+  entity vhdl_testbench at 1( 0) + 0 on 13;
+  architecture test of vhdl_testbench at 8( 108) + 0 on 14;
+file . "vhdl_model.vhd" "754012475364bb16b23fa1a06a45f639de3dfb20" "20260407144522.328":
+  entity vhdl_model at 1( 0) + 0 on 11;
+  architecture rtl of vhdl_model at 16( 395) + 0 on 12;

@@ -1,0 +1,45 @@
+{
+  "conversions": {
+    "nn.Linear": {
+      "strategy": "Matrix Multiplication + Bias Addition",
+      "vhdl_equivalent": "Multiply-Accumulate (MAC) array",
+      "complexity": "O(N*M)",
+      "notes": "Requires fixed-point weights and activation quantization."
+    },
+    "nn.ReLU": {
+      "strategy": "Comparator",
+      "vhdl_equivalent": "if x < 0 then 0 else x",
+      "complexity": "O(1)",
+      "notes": "Single cycle operation."
+    },
+    "nn.Sigmoid": {
+      "strategy": "Piecewise Linear Approximation / LUT",
+      "vhdl_equivalent": "Lookup Table (LUT) or CORDIC",
+      "complexity": "O(log N)",
+      "notes": "Requires ROM for coefficients."
+    },
+    "nn.Tanh": {
+      "strategy": "Piecewise Linear Approximation / LUT",
+      "vhdl_equivalent": "Lookup Table (LUT) or CORDIC",
+      "complexity": "O(log N)",
+      "notes": "Similar to Sigmoid but symmetric."
+    },
+    "nn.Conv2d": {
+      "strategy": "Sliding Window MAC",
+      "vhdl_equivalent": "Parallel line buffers and MAC units",
+      "complexity": "O(H*W*K*K)",
+      "notes": "Highly hardware-intensive; requires significant memory bandwidth."
+    },
+    "nn.MaxPool2d": {
+      "strategy": "Window Max Operator",
+      "vhdl_equivalent": "Comparator tree",
+      "complexity": "O(K*K)",
+      "notes": "Reduces spatial dimension."
+    }
+  },
+  "fixed_point_formats": [
+    "Q8.8 (16-bit, 8-bit integer, 8-bit fractional)",
+    "Q1.15 (16-bit, 1-bit integer, 15-bit fractional)",
+    "Q4.4 (8-bit, 4-bit integer, 4-bit fractional)"
+  ]
+}
