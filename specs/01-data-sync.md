@@ -48,48 +48,57 @@ graph TD
     classDef finish fill:#ceead6,stroke:#137333,stroke-width:2px,color:#137333;
 
     %% Workflow Nodes
-    Start([Daily Trigger]) :::trigger --> Scheduler[GCP Cloud Scheduler]:::trigger
-    Scheduler --> Job[GCP Cloud Run Job Container]:::trigger
+    Start([Daily Trigger]) --> Scheduler[GCP Cloud Scheduler]
+    Scheduler --> Job[GCP Cloud Run Job Container]
     
     %% Startup Phase
-    Job --> InitLog[Initialize Logging & GCS Client]:::startup
-    InitLog --> CheckDB{Does prices.db exist in GCS?}:::decision
+    Job --> InitLog[Initialize Logging & GCS Client]
+    InitLog --> CheckDB{Does prices.db exist in GCS?}
     
     %% GCS Interaction
-    CheckDB -- Yes --> DLDB[Download prices.db to local disk]:::storage
-    CheckDB -- No --> InitLocal[Create local prices.db & Init SQLite Schema]:::database
+    CheckDB -- Yes --> DLDB[Download prices.db to local disk]
+    CheckDB -- No --> InitLocal[Create local prices.db & Init SQLite Schema]
     
-    DLDB --> LoadTickers[Read tickers.csv from GCS / Fallback hardcoded list]:::storage
+    DLDB --> LoadTickers[Read tickers.csv from GCS / Fallback hardcoded list]
     InitLocal --> LoadTickers
     
     %% Processing & Batching
-    LoadTickers --> GetSyncDate[Query last sync date per ticker]:::database
-    GetSyncDate --> BatchLoop[Split 1200 Tickers into Batches of 200]:::process
+    LoadTickers --> GetSyncDate[Query last sync date per ticker]
+    GetSyncDate --> BatchLoop[Split 1200 Tickers into Batches of 200]
     
     %% Batch Loop
-    BatchLoop --> FetchBatch[Fetch Batch from yfinance - period: 10d, interval: 1d]:::process
-    FetchBatch --> FetchSuccess{Fetch Successful?}:::decision
+    BatchLoop --> FetchBatch[Fetch Batch from yfinance - period: 10d, interval: 1d]
+    FetchBatch --> FetchSuccess{Fetch Successful?}
     
     %% Retry logic
-    FetchSuccess -- No --> RetryCheck{Retry Limit Exceeded?}:::decision
-    RetryCheck -- No --> Backoff[Exponential Backoff Delay]:::process
+    FetchSuccess -- No --> RetryCheck{Retry Limit Exceeded?}
+    RetryCheck -- No --> Backoff[Exponential Backoff Delay]
     Backoff --> FetchBatch
-    RetryCheck -- Yes --> LogError[Log Error & Continue Next Batch]:::decision
+    RetryCheck -- Yes --> LogError[Log Error & Continue Next Batch]
     
     %% Data Processing & Upsert
-    FetchSuccess -- Yes --> CleanData[Extract 'Adj Close', Rename & Reshape DataFrame]:::process
-    CleanData --> DB_Upsert[Robust Upsert into SQLite prices table]:::database
+    FetchSuccess -- Yes --> CleanData[Extract 'Adj Close', Rename & Reshape DataFrame]
+    CleanData --> DB_Upsert[Robust Upsert into SQLite prices table]
     
-    LogError --> CheckMore{More Batches?}:::decision
+    LogError --> CheckMore{More Batches?}
     DB_Upsert --> CheckMore
     
     CheckMore -- Yes --> BatchLoop
     
     %% Teardown Phase
-    CheckMore -- No --> Vacuum[Run SQL VACUUM on SQLite database]:::database
-    Vacuum --> UploadDB[Upload prices.db back to GCS Bucket]:::storage
-    UploadDB --> FinalLog[Log Execution Metrics & Time Taken]:::startup
-    FinalLog --> End([Successful Completion]) :::finish
+    CheckMore -- No --> Vacuum[Run SQL VACUUM on SQLite database]
+    Vacuum --> UploadDB[Upload prices.db back to GCS Bucket]
+    UploadDB --> FinalLog[Log Execution Metrics & Time Taken]
+    FinalLog --> End([Successful Completion])
+
+    %% Class Assignments
+    class Start,Scheduler,Job trigger;
+    class InitLog,FinalLog startup;
+    class DLDB,LoadTickers,UploadDB storage;
+    class InitLocal,GetSyncDate,DB_Upsert,Vacuum database;
+    class BatchLoop,FetchBatch,Backoff,CleanData process;
+    class CheckDB,FetchSuccess,RetryCheck,LogError,CheckMore decision;
+    class End finish;
 ```
 
 # Implementation Requirements
