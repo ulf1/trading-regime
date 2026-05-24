@@ -1,6 +1,9 @@
 # Objective
 Implement a daily market data discovery pipeline that runs as a GCP Cloud Run Job. It scrapes the most active stocks across US, Canada, and Europe via Yahoo Finance, identifies new tickers not yet in our system, downloads their historical adjusted close prices (up to 2000 daily data points), and updates both `tickers.csv` and the SQLite database (`prices.db`) backed by Google Cloud Storage. This specification is designed to be architecturally consistent with `01-data-sync.md`.
 
+> [!IMPORTANT]
+> To ensure database schema integrity and prevent ingestion crashes, this pipeline strictly restricts discovery to **standard stocks and equity instruments**. It dynamically filters out listed debt, professional segment bonds, warrants, preferreds, units, and futures before requesting history from yfinance or executing GCS synchronizations.
+
 # Architecture & Constraints
 - **Execution:** GCP Cloud Run Job triggered daily (e.g., at 22:00 CET) by Cloud Scheduler.
 - **Storage:** "Stateless" execution. The script MUST download `tickers.csv` and `prices.db` from a GCS bucket at startup, perform updates locally, and upload the updated files back to GCS upon completion. Do NOT use persistent volumes.
@@ -30,10 +33,10 @@ trading-regime/
 ```
 
 # System Workflow & Business Logic
-The following flowchart illustrates the business logic of the ticker discovery and data initialization process:
+The following flowchart illustrates the business logic of the ticker discovery and data initialization process, including validation and multi-index column handling safeguards to keep the pipeline stable:
 
 ```mermaid
-graph TD
+flowchart TD
     %% Styling and Theme
     classDef trigger fill:#1a73e8,stroke:#1557b0,stroke-width:2px,color:#fff;
     classDef startup fill:#f1f3f4,stroke:#dadce0,stroke-width:2px,color:#202124;
@@ -64,11 +67,29 @@ graph TD
     IdentifyNew -- Yes --> AppendCSV[Append new tickers to local tickers.csv]
     AppendCSV --> LoopNew[Iterate over new tickers]
     
-    LoopNew --> FetchHist[Fetch last 2000d data via yfinance]
-    FetchHist --> ProcessData[Extract 'Adj Close', reshape DataFrame]
-    ProcessData --> DB_Insert[Insert historical data into local prices.db]
+    %% Validation Guard Check
+    LoopNew --> GuardCheck{Is Professional Bond?\n(Contains '-PRO')}
+    GuardCheck -- Yes --> SkipT[Skip Ticker & Log Warning]:::decision
+    GuardCheck -- No --> SuffixCheck{Is Warrant, Unit,\nPreferred, or Future?}:::decision
     
-    DB_Insert --> CheckMore{More new tickers?}
+    SuffixCheck -- Yes --> SkipT
+    SuffixCheck -- No --> BondPatternCheck{Does symbol have digits\nAND a hyphen? \n(eg 'BOND-12')}:::decision
+    
+    BondPatternCheck -- Yes --> SkipT
+    BondPatternCheck -- No --> FetchHist[Fetch data via yfinance as string]
+    
+    %% API Response Normalization
+    FetchHist --> CheckCol{Is DataFrame Column\nMultiIndex?}:::decision
+    CheckCol -- Yes --> Flatten[Flatten Column Index via get_level_values]:::process
+    CheckCol -- No --> ProcessData[Extract 'Adj Close']
+    Flatten --> ProcessData
+    
+    %% Normalization & SQLite Insert
+    ProcessData --> ResetIdx[Reset Index & Normalize Date Column]:::process
+    ResetIdx --> DB_Insert[Insert historical data into local prices.db]
+    
+    SkipT --> CheckMore{More new tickers?}:::decision
+    DB_Insert --> CheckMore
     CheckMore -- Yes --> LoopNew
     
     %% Teardown Phase
@@ -87,6 +108,7 @@ graph TD
     class End,TeardownClean finish;
 ```
 
+
 # Implementation Requirements
 
 ## 1. Scraping Logic (`findticker/src/scraper.py`)
@@ -94,6 +116,9 @@ graph TD
 - POST to the screener API to fetch the most active stocks across specified regions (US, Canada, Europe).
 - Return a list of the parsed stock symbols.
 - Use `yfinance` to download historical data (`period="max"` or up to `2000d`, `interval="1d"`) for newly discovered tickers.
+- **Strict Stock/Equity Filtering:** Implement `is_valid_equity_ticker` to filter out professional segment bonds (`-PRO`), warrants (`-W`, `.WS`), preferred shares (`-P`), units (`-U`), futures (`=F`), and structured debt serial code patterns (symbols with both hyphens and digits).
+- **MultiIndex Safe-Flattening:** Pass the raw `ticker` string instead of list `[ticker]` to `yf.download` to avoid multi-ticker DataFrame layouts. If a MultiIndex is returned, immediately flatten it using `.columns.get_level_values(0)` before index resetting.
+- **Dynamic Date Normalization:** Scan and extract date column names resiliently using candidate fields `['Date', 'Datetime', 'date', 'datetime']` to decouple from internal pandas/yfinance formatting alterations.
 
 ## 2. Database Integration (`findticker/src/database.py`)
 - Define SQLite connection helpers for the local `prices.db`.
@@ -114,6 +139,7 @@ graph TD
 ## 5. Testing (`findticker/tests/`)
 - Unit test database inserts and CSV appending logic.
 - Unit test scraping functionality (mocking the `requests.Session` and Yahoo Finance API response).
+- **Validation Guard Testing:** Verify that validation rules correctly accept standard stock tickers and reject professional debt, warrants, preferreds, units, and futures, confirming that `fetch_historical_data` cleanly bypasses invalid symbols.
 - Integration test for the main orchestrator with mocked GCS clients.
 
 ## 6. Deployment

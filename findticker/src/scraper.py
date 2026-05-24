@@ -73,24 +73,74 @@ def scrape_new_tickers(top_n: int = 20) -> list[str]:
     session, crumb = get_session_and_crumb()
     return fetch_most_active(session, crumb, REGIONS, top_n)
 
+def is_valid_equity_ticker(ticker: str) -> bool:
+    """
+    Performs validation checks to filter out professional debt instruments,
+    structured bonds, warrants, preferred shares, and derivatives,
+    ensuring that only standard stocks/equity instruments are kept.
+    """
+    # 1. Skip Oslo professional bonds listed on Oslo Børs / Nordic ABM
+    if "-PRO" in ticker:
+        return False
+        
+    # 2. Skip common derivative/warrant/preferred/unit suffixes
+    # Warrants (-W, .W, .WS), Units (-U, .U), Preferred (-P), Futures (=F)
+    for suffix in ["-W", ".W", ".WS", "-U", ".U", "-P", "=F"]:
+        if suffix in ticker:
+            return False
+            
+    # 3. Skip bond-like listings which typically contain digits and a hyphen in the symbol part
+    # Example: 'SB1NO47-PRO.OL' or other structured debt products
+    symbol_part = ticker.split(".")[0] if "." in ticker else ticker
+    if "-" in symbol_part and any(char.isdigit() for char in symbol_part):
+        return False
+        
+    return True
+
 def fetch_historical_data(ticker: str) -> pd.DataFrame:
+    """
+    Fetches historical adjusted close prices for a ticker using yfinance.
+    Normalizes MultiIndex outputs and formats the dataset for sqlite injection.
+    """
+    if not is_valid_equity_ticker(ticker):
+        logger.info(f"Skipping non-equity ticker: {ticker}")
+        return pd.DataFrame()
+
     logger.info(f"Fetching historical data for {ticker}...")
     try:
-        data = yf.download([ticker], period="max", interval="1d", auto_adjust=False, threads=False, progress=False)
-        if data.empty or 'Adj Close' not in data.columns:
+        # Pass ticker as string instead of a list to yf.download to obtain a standard single-index DataFrame
+        data = yf.download(ticker, period="max", interval="1d", auto_adjust=False, threads=False, progress=False)
+        if data.empty:
+            return pd.DataFrame()
+            
+        # Flatten MultiIndex columns immediately if present
+        if isinstance(data.columns, pd.MultiIndex):
+            data.columns = data.columns.get_level_values(0)
+            
+        if 'Adj Close' not in data.columns:
+            logger.warning(f"No 'Adj Close' column found for {ticker}. Columns: {list(data.columns)}")
             return pd.DataFrame()
             
         ticker_df = data[['Adj Close']].dropna().copy()
         ticker_df = ticker_df.reset_index()
-        ticker_df['ticker'] = ticker
-        ticker_df['Date'] = ticker_df['Date'].dt.strftime('%Y-%m-%d')
-        ticker_df = ticker_df.rename(columns={'Date': 'date', 'Adj Close': 'adj_close'})
         
-        # Unpack MultiIndex columns if necessary
-        if isinstance(ticker_df.columns, pd.MultiIndex):
-            ticker_df.columns = [col[0] for col in ticker_df.columns]
+        # Locate Date/Datetime column dynamically
+        date_col = None
+        for col in ['Date', 'Datetime', 'date', 'datetime']:
+            if col in ticker_df.columns:
+                date_col = col
+                break
+                
+        if date_col is None:
+            logger.error(f"Could not locate Date column in yfinance output for {ticker}. Columns: {list(ticker_df.columns)}")
+            return pd.DataFrame()
             
-        return ticker_df
+        # Standardize and format output schema
+        ticker_df['ticker'] = ticker
+        ticker_df['date'] = pd.to_datetime(ticker_df[date_col]).dt.strftime('%Y-%m-%d')
+        ticker_df = ticker_df.rename(columns={'Adj Close': 'adj_close'})
+        
+        return ticker_df[['date', 'ticker', 'adj_close']]
     except Exception as e:
         logger.error(f"Error fetching history for {ticker}: {e}")
         return pd.DataFrame()
