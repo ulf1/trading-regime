@@ -5,6 +5,7 @@ import pandas as pd
 from google.cloud import storage
 from database import init_db, insert_initial_data
 from scraper import scrape_new_tickers, fetch_historical_data
+# from default_tickers import DEFAULT_TICKERS
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -56,6 +57,8 @@ def main():
     logger.info(f"Scraped {len(scraped_tickers)} most active tickers.")
     
     new_tickers = [t for t in scraped_tickers if t not in existing_tickers]
+    # new_tickers = new_tickers + [t for t in DEFAULT_TICKERS if t not in existing_tickers]
+    # new_tickers = list(set(new_tickers))
     
     if not new_tickers:
         logger.info("No new tickers discovered. Exiting cleanly.")
@@ -65,9 +68,11 @@ def main():
     
     for ticker in new_tickers:
         df = fetch_historical_data(ticker)
-        if not df.empty:
+        if len(df) >= 2000:
             insert_initial_data(DB_NAME, df)
             existing_tickers.add(ticker)
+        else:
+            logger.info(f"Ticker {ticker} has less than 2000 data points. Not added to the database.")
             
     # Save updated tickers.csv
     pd.Series(list(existing_tickers)).to_csv(TICKERS_CSV, index=False, header=False)

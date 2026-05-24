@@ -6,7 +6,60 @@ import yfinance as yf
 
 logger = logging.getLogger(__name__)
 
-REGIONS = ["us", "ca", "gb", "de", "fr", "it", "es", "nl", "be", "at", "ch", "pt", "ie", "lu", "mc", "se", "no", "dk", "fi", "is", "pl", "cz", "sk", "hu", "ro", "bg", "hr", "si", "ee", "lv", "lt", "gr", "cy", "mt", "rs", "ba", "me", "mk", "al", "tr", "ua"]
+REGIONS = [
+    # North America
+    "us",   # United States
+    "ca",   # Canada
+
+    # Western Europe
+    "gb",   # United Kingdom
+    "de",   # Germany
+    "fr",   # France (Euronext)
+    "it",   # Italy (Euronext)
+    "es",   # Spain
+    "nl",   # Netherlands (Euronext)
+    "be",   # Belgium (Euronext)
+    "at",   # Austria 
+    "ch",   # Switzerland
+    "pt",   # Portugal (Euronext)
+    # "ie",   # Ireland (Euronext)
+    # "lu",   # Luxembourg
+    # "mc",   # Monaco
+
+    # Northern Europe
+    # "se",   # Sweden (Nasdaq Nordic)
+    # "no",   # Norway (Euronext)
+    # "dk",   # Denmark (Nasdaq Nordic)
+    # "fi",   # Finland (Nasdaq Nordic)
+    # "is",   # Iceland (Nasdaq Nordic)
+
+    # Eastern Europe
+    # "pl",   # Poland
+    # "cz",   # Czech Republic
+    # "sk",   # Slovakia
+    # "hu",   # Hungary
+    # "ro",   # Romania
+    # "bg",   # Bulgaria
+    # "hr",   # Croatia
+    # "si",   # Slovenia
+    # "ee",   # Estonia (Nasdaq Baltic)
+    # "lv",   # Latvia (Nasdaq Baltic)
+    # "lt",   # Lithuania (Nasdaq Baltic)
+
+    # Southern / Southeastern Europe
+    # "gr",   # Greece (Euronext)
+    # "cy",   # Cyprus
+    # "mt",   # Malta
+    # "rs",   # Serbia
+    # "ba",   # Bosnia and Herzegovina
+    # "me",   # Montenegro
+    # "mk",   # North Macedonia
+    # "al",   # Albania
+    # "tr",   # Turkey
+
+    # Other European
+    # "ua",   # Ukraine
+]
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
