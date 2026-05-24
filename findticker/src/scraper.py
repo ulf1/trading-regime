@@ -121,25 +121,15 @@ def fetch_historical_data(ticker: str) -> pd.DataFrame:
             logger.warning(f"No 'Adj Close' column found for {ticker}. Columns: {list(data.columns)}")
             return pd.DataFrame()
             
+        # Extract Adj Close and drop missing observations
         ticker_df = data[['Adj Close']].dropna().copy()
-        ticker_df = ticker_df.reset_index()
         
-        # Locate Date/Datetime column dynamically
-        date_col = None
-        for col in ['Date', 'Datetime', 'date', 'datetime']:
-            if col in ticker_df.columns:
-                date_col = col
-                break
-                
-        if date_col is None:
-            logger.error(f"Could not locate Date column in yfinance output for {ticker}. Columns: {list(ticker_df.columns)}")
-            return pd.DataFrame()
-            
-        # Standardize and format output schema
+        # Directly format dates from Datetime index to avoid key lookup errors (e.g. index named 'index')
+        ticker_df['date'] = pd.to_datetime(ticker_df.index).strftime('%Y-%m-%d')
         ticker_df['ticker'] = ticker
-        ticker_df['date'] = pd.to_datetime(ticker_df[date_col]).dt.strftime('%Y-%m-%d')
-        ticker_df = ticker_df.rename(columns={'Adj Close': 'adj_close'})
         
+        # Rename price column and order standard output schema
+        ticker_df = ticker_df.rename(columns={'Adj Close': 'adj_close'})
         return ticker_df[['date', 'ticker', 'adj_close']]
     except Exception as e:
         logger.error(f"Error fetching history for {ticker}: {e}")

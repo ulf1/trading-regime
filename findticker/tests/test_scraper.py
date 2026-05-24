@@ -36,3 +36,8 @@ def test_fetch_historical_data_skips_invalid():
     
     df_warrant = fetch_historical_data("AAPL-W")
     assert df_warrant.empty is True
+
+def test_fetch_historical_data_skips_missing_adj_close():
+    # Attempting to fetch a nonexistent symbol returns an empty DataFrame cleanly
+    df = fetch_historical_data("NONEXISTENT_TICKER")
+    assert df.empty is True
