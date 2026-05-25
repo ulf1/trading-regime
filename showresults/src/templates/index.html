@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,10 +9,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- Link Custom Premium Glassmorphic Stylesheet -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
     <div class="dashboard-container">
         <!-- Header Section -->
@@ -33,12 +35,12 @@
             <div class="stats-card bullish-card">
                 <div class="stats-label">Bullish Regimes</div>
                 <div class="stats-value text-bull">{{ bull_count }}</div>
-                <div class="stats-footer">Spread > +20%</div>
+                <!-- <div class="stats-footer">Spread > +20%</div> -->
             </div>
             <div class="stats-card bear-card">
                 <div class="stats-label">Bearish Regimes</div>
                 <div class="stats-value text-bear">{{ bear_count }}</div>
-                <div class="stats-footer">Spread < -20%</div>
+                <!-- <div class="stats-footer">Spread < -20%</div> -->
             </div>
             <div class="stats-card neutral-card">
                 <div class="stats-label">Neutral / Mixed</div>
@@ -54,7 +56,8 @@
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 </svg>
-                <input type="text" id="tickerSearch" placeholder="Search by Ticker symbol (e.g. AAPL, BTC-USD)..." autocomplete="off">
+                <input type="text" id="tickerSearch" placeholder="Search by Ticker symbol (e.g. AAPL, BTC-USD)..."
+                    autocomplete="off">
             </div>
             <div class="filter-metrics">
                 <span id="resultsCount">Showing all {{ forecasts|length }} tickers</span>
@@ -74,8 +77,10 @@
                         <th onclick="sortTable(5, 'number')">Proba0 % <span class="sort-indicator"></span></th>
                         <th onclick="sortTable(6, 'number')">Proba1 % <span class="sort-indicator"></span></th>
                         <th onclick="sortTable(7, 'number')">Proba2 % <span class="sort-indicator"></span></th>
-                        <th onclick="sortTable(8, 'number')" class="sort-active-desc">Proba0 - Proba2 <span class="sort-indicator desc"></span></th>
-                        <th onclick="sortTable(9, 'string')">Last Data Date <span class="sort-indicator"></span></th>
+                        <th onclick="sortTable(8, 'number')">EV % <span class="sort-indicator"></span></th>
+                        <th onclick="sortTable(9, 'number')" class="sort-active-desc">Proba0 - Proba2 <span
+                                class="sort-indicator desc"></span></th>
+                        <th onclick="sortTable(10, 'string')">Last Data Date <span class="sort-indicator"></span></th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
@@ -90,17 +95,30 @@
                         <td class="number-col">{{ f.proba_1 if f.proba_1 is not none else '—' }}%</td>
                         <td class="number-col">{{ f.proba_2 if f.proba_2 is not none else '—' }}%</td>
                         <td class="number-col font-bold">
-                            {% if f.proba_spread is not none %}
-                                {% if f.proba_spread > 20 %}
-                                    <span class="badge badge-bull">+{{ f.proba_spread }}%</span>
-                                {% elif f.proba_spread < -20 %}
-                                    <span class="badge badge-bear">{{ f.proba_spread }}%</span>
+                            {% if f.expected_return is not none %}
+                                {% if f.expected_return > 0.0 %}
+                                    <span class="text-bull">+{{ f.expected_return }}%</span>
+                                {% elif f.expected_return < 0.0 %}
+                                    <span class="text-bear">{{ f.expected_return }}%</span>
                                 {% else %}
-                                    <span class="badge badge-neutral">{% if f.proba_spread > 0 %}+{% endif %}{{ f.proba_spread }}%</span>
+                                    <span class="text-neutral">0.0%</span>
                                 {% endif %}
                             {% else %}
                                 —
                             {% endif %}
+                        </td>
+                        <td class="number-col font-bold">
+                            {% if f.proba_spread is not none %}
+                            {% if f.proba_spread > 20 %}
+                            <span class="badge badge-bull">+{{ f.proba_spread }}%</span>
+                            {% elif f.proba_spread < -20 %} <span class="badge badge-bear">{{ f.proba_spread }}%</span>
+                                {% else %}
+                                <span class="badge badge-neutral">{% if f.proba_spread > 0 %}+{% endif %}{{
+                                    f.proba_spread }}%</span>
+                                {% endif %}
+                                {% else %}
+                                —
+                                {% endif %}
                         </td>
                         <td class="date-col">{{ f.last_price_date if f.last_price_date else '—' }}</td>
                     </tr>
@@ -108,7 +126,7 @@
                 </tbody>
             </table>
         </div>
-        
+
         <footer class="dashboard-footer">
             <p>Trading Regime Ingestion Pipeline. Google Cloud Platform Production Environment.</p>
         </footer>
@@ -145,9 +163,9 @@
 
         // 2. Client-Side Interactive Column Sorting Logic
         let sortDirections = {};
-        
-        // Initialize default descending sort on 'Proba0 - Proba2' column (index 8)
-        sortDirections[8] = 'desc';
+
+        // Initialize default descending sort on 'Proba0 - Proba2' column (index 9)
+        sortDirections[9] = 'desc';
 
         function sortTable(columnIndex, type) {
             const currentDir = sortDirections[columnIndex] === 'asc' ? 'desc' : 'asc';
@@ -165,8 +183,8 @@
                     return currentDir === 'asc' ? cellA - cellB : cellB - cellA;
                 } else {
                     // String fallback
-                    return currentDir === 'asc' 
-                        ? cellA.localeCompare(cellB) 
+                    return currentDir === 'asc'
+                        ? cellA.localeCompare(cellB)
                         : cellB.localeCompare(cellA);
                 }
             });
@@ -192,4 +210,5 @@
         }
     </script>
 </body>
+
 </html>

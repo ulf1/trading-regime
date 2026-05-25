@@ -133,8 +133,7 @@ def main():
         return
         
     df_raw = pd.DataFrame(raw_records, columns=["ticker", "date", "adj_close"])
-    # df_raw is anti-chronological, so reverse it
-    df_raw.sort_values(by=["ticker", "date"], ascending=[True, False], inplace=True)
+    df_raw.sort_values(by=["ticker", "date"], ascending=[True, True], inplace=True)  # df_raw is anti-chronological, so reverse it
     
     # Get last price mapping for outputs
     df_last_price = df_raw.groupby("ticker").last().reset_index()

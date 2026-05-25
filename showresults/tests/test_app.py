@@ -25,6 +25,7 @@ def test_dashboard_route(mock_get_latest, mock_download, client):
             "proba_1": 10.0,
             "proba_2": 5.0,
             "proba_spread": 80.0,
+            "expected_return": 0.2,
             "last_price_date": "2026-05-25",
             "last_price_value": 152.5
         },
@@ -39,6 +40,7 @@ def test_dashboard_route(mock_get_latest, mock_download, client):
             "proba_1": 20.0,
             "proba_2": 10.0,
             "proba_spread": 60.0,
+            "expected_return": 0.4,
             "last_price_date": "2026-05-25",
             "last_price_value": 305.0
         }
@@ -52,6 +54,8 @@ def test_dashboard_route(mock_get_latest, mock_download, client):
     assert "AAPL" in html
     assert "MSFT" in html
     assert "+80.0%" in html
+    assert "+0.2%" in html
+    assert "+0.4%" in html
     assert "2026-05-25" in html
     assert "Total Tickers" in html
     

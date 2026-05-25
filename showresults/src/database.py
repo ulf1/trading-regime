@@ -127,6 +127,11 @@ def get_latest_forecasts(db_path: str = None) -> list[dict]:
             spread = None
             if proba_0 is not None and proba_2 is not None:
                 spread = round((proba_0 - proba_2) * 100.0, 1)
+            
+            # computed column: expected return
+            expected_return = None
+            if proba_0 is not None and proba_1 is not None and proba_2 is not None:
+                expected_return = round((proba_0 * mu_0 + proba_1 * mu_1 + proba_2 * mu_2) * 100.0, 1)
 
             results.append({
                 "ticker": row["ticker"],
@@ -139,6 +144,7 @@ def get_latest_forecasts(db_path: str = None) -> list[dict]:
                 "proba_1": formatted_proba1,
                 "proba_2": formatted_proba2,
                 "proba_spread": spread,
+                "expected_return": expected_return,
                 "last_price_date": row["last_price_date"],
                 "last_price_value": round(row["last_price_value"], 2) if row["last_price_value"] is not None else None
             })

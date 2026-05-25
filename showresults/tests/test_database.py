@@ -88,10 +88,11 @@ def test_get_latest_forecasts(temp_forecasts_db):
     assert aapl["proba_0"] == 85.0
     # proba_2 was 0.05 -> 5.0
     assert aapl["proba_2"] == 5.0
-    
     # computed column: (proba_0 - proba_2) * 100
     # 0.85 - 0.05 = 0.80 -> 80.0
     assert aapl["proba_spread"] == 80.0
+    # expected return: (0.85 * 0.002 + 0.1 * 0.0 + 0.05 * -0.003) * 100 = 0.155 -> 0.2
+    assert aapl["expected_return"] == 0.2
 
     # Verify MSFT values
     msft = res_map["MSFT"]
@@ -99,3 +100,5 @@ def test_get_latest_forecasts(temp_forecasts_db):
     assert msft["nll"] == 22.4
     assert msft["mu_0"] == 0.5
     assert msft["proba_spread"] == 60.0 # (0.7 - 0.1) * 100 = 60.0
+    # expected return: (0.7 * 0.005 + 0.2 * 0.001 + 0.1 * -0.001) * 100 = 0.36 -> 0.4
+    assert msft["expected_return"] == 0.4
