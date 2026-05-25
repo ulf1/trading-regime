@@ -66,10 +66,16 @@ def warm_start_model(model: MarkovRegimeSwitching, tickers: list[str], previous_
                 # mu: (N, K)
                 # raw_sigma: (N, K)
                 # raw_trans_mat: (N, K, K)
-                # The stored mu/raw_sigma correspond to State 0 (Bull) from the sorted state.
-                # So we can fill State 0 with previous parameters, and initialize other states normally.
-                model.mu[idx, 0] = params['mu']
-                model.raw_sigma[idx, 0] = params['raw_sigma']
+                # Warm start all 3 states of mu
+                model.mu[idx, 0] = params['mu_0']
+                model.mu[idx, 1] = params['mu_1']
+                model.mu[idx, 2] = params['mu_2']
+                
+                # Warm start all 3 states of raw_sigma
+                model.raw_sigma[idx, 0] = params['raw_sigma_0']
+                model.raw_sigma[idx, 1] = params['raw_sigma_1']
+                model.raw_sigma[idx, 2] = params['raw_sigma_2']
+
                 
                 # If we have previous transition matrix details, fill the logits
                 p = params['transition_matrix'] # shape (3, 3)
@@ -181,9 +187,15 @@ def main():
         # Retrieve last price info
         last_date, last_val = last_price_map.get(ticker, (last_data_dt, 0.0))
         
-        # State 0 (Bull) parameters to store
-        ticker_mu = mu[idx, 0].item()
-        ticker_raw_sigma = trained_model.raw_sigma[idx, 0].item()
+        # Extract all 3 states of mu
+        mu_0 = mu[idx, 0].item()
+        mu_1 = mu[idx, 1].item()
+        mu_2 = mu[idx, 2].item()
+        
+        # Extract all 3 states of raw_sigma
+        sig_0 = trained_model.raw_sigma[idx, 0].item()
+        sig_1 = trained_model.raw_sigma[idx, 1].item()
+        sig_2 = trained_model.raw_sigma[idx, 2].item()
         
         # Transition matrix elements
         p = trans_mat[idx] # (3, 3)
@@ -200,8 +212,12 @@ def main():
             last_data_dt,
             ticker,
             ticker_nll,
-            ticker_mu,
-            ticker_raw_sigma,
+            mu_0,
+            mu_1,
+            mu_2,
+            sig_0,
+            sig_1,
+            sig_2,
             p[0, 0].item(), p[0, 1].item(), p[0, 2].item(), # State 0 transitions
             p[1, 0].item(), p[1, 1].item(), p[1, 2].item(), # State 1 transitions
             p[2, 0].item(), p[2, 1].item(), p[2, 2].item(), # State 2 transitions
@@ -212,6 +228,7 @@ def main():
             p_next_1,
             p_next_2
         ))
+
         
     # Write to local forecasts.db
     logger.info(f"Upserting {len(results_list)} results to local {FORECASTS_DB}...")
