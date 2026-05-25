@@ -22,20 +22,25 @@ class MarkovRegimeSwitching(nn.Module):
         
         # Unconstrained parameters optimized directly via autograd.
         # Mean of each state for each time series: shape (N, K)
-        self.mu = nn.Parameter(torch.randn(num_series, num_states))
+        self.mu = nn.Parameter(torch.tensor([[0.02, 0.0, -0.2] for _ in range(num_series)], dtype=torch.float64))
         
         # Log of standard deviations to ensure variance is strictly positive: shape (N, K)
-        self.raw_sigma = nn.Parameter(torch.zeros(num_series, num_states))
+        self.raw_sigma = nn.Parameter(torch.zeros(num_series, num_states), dtype=torch.float64)
         
         # Unconstrained logits for transition probability matrix: shape (N, K, K)
         # Raw value raw_trans_mat[i, j, k] corresponds to transition from state j to state k
-        self.raw_trans_mat = nn.Parameter(torch.zeros(num_series, num_states, num_states))
+        self.raw_trans_mat = nn.Parameter(torch.tensor([[
+            [2., -2, -2],
+            [-2, 2., -2],
+            [-2, -2, 2.]
+        ] for _ in range(num_series)], dtype=torch.float64))
         
         # Initial state probabilities: shape (N, K). Defaults to a uniform distribution.
         self.register_buffer(
             'initial_prob', 
             torch.ones(num_series, num_states) / num_states
         )
+
 
     def get_constrained_params(self) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
@@ -161,7 +166,7 @@ def occupancy_prior(
 def train_mrs_model(
     model: MarkovRegimeSwitching, 
     y: torch.Tensor, 
-    epochs: int = 600, 
+    epochs: int = 150, 
     lr: float = 0.05,
     lam: float = 50.0,
     target_occ: Tuple[float, float, float] = (0.3, 0.4, 0.3)
