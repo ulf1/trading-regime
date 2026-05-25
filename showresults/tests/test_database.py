@@ -15,9 +15,9 @@ def temp_forecasts_db(tmp_path):
         current_date DATE,
         ticker TEXT,
         nll DOUBLE PRECISION,
-        mu_0 DOUBLE PRECISION,
-        mu_1 DOUBLE PRECISION,
-        mu_2 DOUBLE PRECISION,
+        raw_mu_0 DOUBLE PRECISION,
+        raw_mu_1 DOUBLE PRECISION,
+        raw_mu_2 DOUBLE PRECISION,
         raw_sigma_0 DOUBLE PRECISION,
         raw_sigma_1 DOUBLE PRECISION,
         raw_sigma_2 DOUBLE PRECISION,
@@ -41,14 +41,15 @@ def temp_forecasts_db(tmp_path):
     
     # Insert multiple rows, including duplicate tickers with different dates
     # so we can test that only the LATEST row is fetched.
+    import math
     data = [
-        # Older AAPL run
-        ("2026-05-24", "AAPL", 10.5, 0.001, 0.0, -0.002, 0.1, 0.2, 0.3, 0.8, 0.1, 0.1, 0.1, 0.8, 0.1, 0.1, 0.1, 0.8, 2000, "2026-05-24", 150.0, 0.8, 0.1, 0.1),
-        # Newer AAPL run (should be fetched)
-        ("2026-05-25", "AAPL", 9.8, 0.002, 0.0, -0.003, 0.1, 0.2, 0.3, 0.8, 0.1, 0.1, 0.1, 0.8, 0.1, 0.1, 0.1, 0.8, 2000, "2026-05-25", 152.5, 0.85, 0.1, 0.05),
+        # Older AAPL run: mu_bear=-0.002, mu_neutral=0.0, mu_bull=0.001
+        ("2026-05-24", "AAPL", 10.5, -0.002, math.log(0.002), math.log(0.001), 0.1, 0.2, 0.3, 0.8, 0.1, 0.1, 0.1, 0.8, 0.1, 0.1, 0.1, 0.8, 2000, "2026-05-24", 150.0, 0.8, 0.1, 0.1),
+        # Newer AAPL run: mu_bear=-0.003, mu_neutral=0.0, mu_bull=0.002 (should be fetched)
+        ("2026-05-25", "AAPL", 9.8, -0.003, math.log(0.003), math.log(0.002), 0.1, 0.2, 0.3, 0.8, 0.1, 0.1, 0.1, 0.8, 0.1, 0.1, 0.1, 0.8, 2000, "2026-05-25", 152.5, 0.85, 0.1, 0.05),
         
-        # MSFT (only one run)
-        ("2026-05-25", "MSFT", 22.4, 0.005, 0.001, -0.001, 0.1, 0.2, 0.3, 0.8, 0.1, 0.1, 0.1, 0.8, 0.1, 0.1, 0.1, 0.8, 2000, "2026-05-25", 305.0, 0.7, 0.2, 0.1),
+        # MSFT: mu_bear=-0.001, mu_neutral=0.001, mu_bull=0.005 (only one run)
+        ("2026-05-25", "MSFT", 22.4, -0.001, math.log(0.002), math.log(0.004), 0.1, 0.2, 0.3, 0.8, 0.1, 0.1, 0.1, 0.8, 0.1, 0.1, 0.1, 0.8, 2000, "2026-05-25", 305.0, 0.7, 0.2, 0.1),
     ]
     
     cursor.executemany("""

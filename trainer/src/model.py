@@ -21,8 +21,8 @@ class MarkovRegimeSwitching(nn.Module):
         self.num_states = num_states
         
         # Unconstrained parameters optimized directly via autograd.
-        # Mean of each state for each time series: shape (N, K)
-        self.mu = nn.Parameter(torch.tensor([[0.02, 0.0, -0.2] for _ in range(num_series)], dtype=torch.float64))
+        # Raw mu parameterized for ordering constraint (alpha, beta, gamma): shape (N, K)
+        self.raw_mu = nn.Parameter(torch.tensor([[-0.0183, -4.0, -4.0] for _ in range(num_series)], dtype=torch.float64))
         
         # Log of standard deviations to ensure variance is strictly positive: shape (N, K)
         self.raw_sigma = nn.Parameter(torch.zeros(num_series, num_states, dtype=torch.float64))
@@ -47,6 +47,7 @@ class MarkovRegimeSwitching(nn.Module):
         Applies reparameterization constraints to raw parameters:
         - sigma = exp(raw_sigma) -> Guarantees strictly positive standard deviations.
         - transition_matrix = softmax(raw_trans_mat, dim=2) -> Guarantees row-stochastic matrices.
+        - mu: Enforces order mu_bear <= mu_neutral <= mu_bull
         
         Returns:
             mu: Means, shape (N, K)
@@ -55,7 +56,18 @@ class MarkovRegimeSwitching(nn.Module):
         """
         sigma = torch.exp(self.raw_sigma)
         transition_matrix = torch.softmax(self.raw_trans_mat, dim=2)
-        return self.mu, sigma, transition_matrix
+        
+        alpha = self.raw_mu[:, 0]
+        beta = self.raw_mu[:, 1]
+        gamma = self.raw_mu[:, 2]
+        
+        mu_bear = alpha
+        mu_neutral = alpha + torch.exp(beta)
+        mu_bull = alpha + torch.exp(beta) + torch.exp(gamma)
+        
+        mu = torch.stack([mu_bull, mu_neutral, mu_bear], dim=1)
+        
+        return mu, sigma, transition_matrix
 
     def forward(self, y: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """
@@ -113,35 +125,6 @@ class MarkovRegimeSwitching(nn.Module):
         return total_nll, filtered_probs, individual_nlls
 
 
-    @torch.no_grad()
-    def sort_regimes(self) -> None:
-        """
-        Sorts the regimes/states for each independent time series in descending order 
-        of their estimated means (mu). This resolves the label-switching problem, 
-        ensuring that:
-        - State 0 Consistently represents the "high-mean/bull" regime.
-        - State 1 represents the "neutral/intermediate" regime.
-        - State 2 represents the "low-mean/bear" regime.
-        """
-        # Find descending indices based on mu: shape (N, K)
-        sort_indices = torch.argsort(self.mu, dim=1, descending=True)
-        
-        # Sort mu and raw_sigma using gather
-        self.mu.data = torch.gather(self.mu.data, 1, sort_indices)
-        self.raw_sigma.data = torch.gather(self.raw_sigma.data, 1, sort_indices)
-        
-        # Sort the 3D transition probability logits: shape (N, K, K)
-        # We must permute both rows (state t-1) and columns (state t) for each series i
-        K = self.num_states
-        
-        # 1. Permute rows (dim 1)
-        idx_rows = sort_indices.unsqueeze(2).expand(-1, -1, K)
-        temp = torch.gather(self.raw_trans_mat.data, 1, idx_rows)
-        
-        # 2. Permute columns (dim 2)
-        idx_cols = sort_indices.unsqueeze(1).expand(-1, K, -1)
-        self.raw_trans_mat.data = torch.gather(temp, 2, idx_cols)
-
 
 def occupancy_prior(
     state_probs: torch.Tensor,
@@ -163,13 +146,44 @@ def occupancy_prior(
     return lam * ((occ - target_tensor)**2).mean()
 
 
+def transition_persistence_penalty(
+    model: MarkovRegimeSwitching,
+    lam: float = 1000.0
+) -> torch.Tensor:
+    """
+    Calculates a penalty to encourage high diagonal entries in the transition matrix,
+    representing persistence (regimes tend to stay in the same state).
+
+    This matches:
+        [
+        \text{loss} = \frac{1}{n}\sum_i \max(0, 0.95 - p_{ii})^2
+        ]
+    """
+    _, _, trans_mat = model.get_constrained_params()
+    
+    # Sum of diagonal elements for each series
+    persistence = torch.diagonal(trans_mat, dim1=1, dim2=2)
+    
+    # Penalty if diagonal is less than 0.95
+    return lam * (torch.clamp(0.95 - persistence, min=0) ** 2).mean()
+
+
+def regime_volatility_penalty(
+    model: MarkovRegimeSwitching,
+    lam: float = 100.0
+) -> torch.Tensor:
+    """
+    Penalizes the difference in volatility between regimes.
+    """
+    _, sigma, _ = model.get_constrained_params()
+    return lam * ((sigma[:, 0] - sigma[:, 1]) ** 2 + (sigma[:, 2] - sigma[:, 1]) ** 2).mean()
+
+
 def train_mrs_model(
     model: MarkovRegimeSwitching, 
     y: torch.Tensor, 
     epochs: int = 150, 
     lr: float = 0.05,
-    lam: float = 50.0,
-    target_occ: Tuple[float, float, float] = (0.3, 0.4, 0.3)
 ) -> Tuple[MarkovRegimeSwitching, List[float]]:
     """
     Standard training pipeline for the Markov Regime-Switching model using the Adam optimizer.
@@ -196,9 +210,13 @@ def train_mrs_model(
         # Forward pass
         nll, filtered_probs, _ = model(y)
 
-        # Occupancy Penalty
-        penalty = occupancy_prior(filtered_probs, target=target_occ, lam=lam)
-        loss = nll + penalty
+        # Penalties
+        penalty_occ = occupancy_prior(filtered_probs)
+        penalty_pers = transition_persistence_penalty(model)
+        penalty_vol = regime_volatility_penalty(model)
+        
+        # loss function
+        loss = nll + penalty_occ + penalty_pers + penalty_vol
         
         # Backpropagation
         loss.backward()

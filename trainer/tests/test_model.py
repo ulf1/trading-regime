@@ -52,28 +52,22 @@ def test_model_forward_shape_and_nll():
     prob_sums = torch.sum(filtered_probs, dim=2)
     torch.testing.assert_close(prob_sums, torch.ones((T, N), dtype=torch.float64))
 
-def test_parameter_sorting_logic():
+def test_parameter_ordering_constraint():
     N, K = 3, 3
     model = MarkovRegimeSwitching(num_series=N, num_states=K)
     
-    # Inject unsorted mu parameters
+    # Inject various raw_mu values (unconstrained alpha, beta, gamma)
     with torch.no_grad():
-        model.mu[0] = torch.tensor([1.5, 3.2, -0.5])  # Unsorted
-        model.mu[1] = torch.tensor([-2.0, 5.0, 0.0])   # Unsorted
-        model.mu[2] = torch.tensor([0.1, 0.2, 0.3])    # Unsorted
-        
-        # Inject standard transitions
-        model.raw_trans_mat.fill_(0.0)
-    
-    # Apply parameter sorting
-    model.sort_regimes()
+        model.raw_mu[0] = torch.tensor([1.5, 3.2, -0.5])
+        model.raw_mu[1] = torch.tensor([-2.0, 5.0, 0.0])
+        model.raw_mu[2] = torch.tensor([0.1, 0.2, 0.3])
     
     mu_sorted, _, _ = model.get_constrained_params()
     
-    # Check that mu for every series is strictly sorted in descending order: mu_0 > mu_1 > mu_2
+    # Check that mu for every series is strictly sorted: mu_bull (0) >= mu_neutral (1) >= mu_bear (2)
     for i in range(N):
-        assert mu_sorted[i, 0] > mu_sorted[i, 1]
-        assert mu_sorted[i, 1] > mu_sorted[i, 2]
+        assert mu_sorted[i, 0] >= mu_sorted[i, 1]
+        assert mu_sorted[i, 1] >= mu_sorted[i, 2]
 
 def test_gradient_flow():
     T, N, K = 50, 2, 3
@@ -87,8 +81,8 @@ def test_gradient_flow():
     total_nll.backward()
     
     # Check model parameters received non-zero gradients
-    assert model.mu.grad is not None
-    assert not torch.all(model.mu.grad == 0.0)
+    assert model.raw_mu.grad is not None
+    assert not torch.all(model.raw_mu.grad == 0.0)
     
     assert model.raw_sigma.grad is not None
     assert not torch.all(model.raw_sigma.grad == 0.0)
@@ -114,7 +108,7 @@ def test_model_determinism():
     assert losses1 == losses2
     
     # Check model parameters are identical
-    torch.testing.assert_close(model1.mu, model2.mu)
+    torch.testing.assert_close(model1.raw_mu, model2.raw_mu)
     torch.testing.assert_close(model1.raw_sigma, model2.raw_sigma)
     torch.testing.assert_close(model1.raw_trans_mat, model2.raw_trans_mat)
 

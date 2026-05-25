@@ -81,7 +81,7 @@ def get_latest_forecasts(db_path: str = None) -> list[dict]:
             current_date,
             ticker,
             nll,
-            mu_0, mu_1, mu_2,
+            raw_mu_0, raw_mu_1, raw_mu_2,
             proba_1d_0, proba_1d_1, proba_1d_2,
             last_price_date,
             last_price_value,
@@ -92,7 +92,7 @@ def get_latest_forecasts(db_path: str = None) -> list[dict]:
         current_date,
         ticker,
         nll,
-        mu_0, mu_1, mu_2,
+        raw_mu_0, raw_mu_1, raw_mu_2,
         proba_1d_0, proba_1d_1, proba_1d_2,
         last_price_date,
         last_price_value
@@ -104,17 +104,26 @@ def get_latest_forecasts(db_path: str = None) -> list[dict]:
     try:
         cursor.execute(query)
         rows = cursor.fetchall()
+        import math
         for row in rows:
             # Map raw floats safely
             nll = row["nll"]
-            mu_0 = row["mu_0"]
-            mu_1 = row["mu_1"]
-            mu_2 = row["mu_2"]
+            raw_mu_0 = row["raw_mu_0"]
+            raw_mu_1 = row["raw_mu_1"]
+            raw_mu_2 = row["raw_mu_2"]
             proba_0 = row["proba_1d_0"]
             proba_1 = row["proba_1d_1"]
             proba_2 = row["proba_1d_2"]
 
-            # Mathematical conversions: multiply by 100, format to 1 decimal place
+            # Mathematical conversions: reconstruct original ordered mu values from raw parameters
+            # mu_bear (State 2) = alpha
+            # mu_neutral (State 1) = alpha + exp(beta)
+            # mu_bull (State 0) = alpha + exp(beta) + exp(gamma)
+            mu_2 = raw_mu_0 if raw_mu_0 is not None else None
+            mu_1 = raw_mu_0 + math.exp(raw_mu_1) if (raw_mu_0 is not None and raw_mu_1 is not None) else None
+            mu_0 = raw_mu_0 + math.exp(raw_mu_1) + math.exp(raw_mu_2) if (raw_mu_0 is not None and raw_mu_1 is not None and raw_mu_2 is not None) else None
+
+            # multiply by 100, format to 1 decimal place
             formatted_mu0 = round(mu_0 * 100.0, 1) if mu_0 is not None else None
             formatted_mu1 = round(mu_1 * 100.0, 1) if mu_1 is not None else None
             formatted_mu2 = round(mu_2 * 100.0, 1) if mu_2 is not None else None
@@ -130,7 +139,7 @@ def get_latest_forecasts(db_path: str = None) -> list[dict]:
             
             # computed column: expected return
             expected_return = None
-            if proba_0 is not None and proba_1 is not None and proba_2 is not None:
+            if proba_0 is not None and proba_1 is not None and proba_2 is not None and mu_0 is not None and mu_1 is not None and mu_2 is not None:
                 expected_return = round((proba_0 * mu_0 + proba_1 * mu_1 + proba_2 * mu_2) * 100.0, 1)
 
             results.append({
