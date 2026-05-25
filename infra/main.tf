@@ -1,8 +1,8 @@
 # GCS Bucket
 resource "google_storage_bucket" "market_data" {
-  name          = var.bucket_name
-  location      = var.region
-  force_destroy = false
+  name                        = var.bucket_name
+  location                    = var.region
+  force_destroy               = false
   uniform_bucket_level_access = true
 }
 
@@ -58,11 +58,11 @@ resource "google_cloud_run_v2_job" "datasync" {
 }
 
 resource "google_cloud_scheduler_job" "datasync_schedule" {
-  name             = "datasync-schedule"
-  description      = "Trigger Data Sync Job Daily"
-  schedule         = "0 1 * * *"
-  time_zone        = "CET"
-  region           = var.region
+  name        = "datasync-schedule"
+  description = "Trigger Data Sync Job Daily"
+  schedule    = "0 1 * * *"
+  time_zone   = "CET"
+  region      = var.region
 
   http_target {
     http_method = "POST"
@@ -100,11 +100,11 @@ resource "google_cloud_run_v2_job" "tickerchecker" {
 }
 
 resource "google_cloud_scheduler_job" "tickerchecker_schedule" {
-  name             = "tickerchecker-schedule"
-  description      = "Trigger Ticker Checker Weekly on Sat 19:00 CET"
-  schedule         = "0 19 * * 6"
-  time_zone        = "CET"
-  region           = var.region
+  name        = "tickerchecker-schedule"
+  description = "Trigger Ticker Checker Weekly on Sat 19:00 CET"
+  schedule    = "0 19 * * 6"
+  time_zone   = "CET"
+  region      = var.region
 
   http_target {
     http_method = "POST"
@@ -142,11 +142,11 @@ resource "google_cloud_run_v2_job" "findticker" {
 }
 
 resource "google_cloud_scheduler_job" "findticker_schedule" {
-  name             = "findticker-schedule"
-  description      = "Trigger Find Ticker Daily 22:00 CET"
-  schedule         = "0 22 * * *"
-  time_zone        = "CET"
-  region           = var.region
+  name        = "findticker-schedule"
+  description = "Trigger Find Ticker Daily 22:00 CET"
+  schedule    = "0 22 * * *"
+  time_zone   = "CET"
+  region      = var.region
 
   http_target {
     http_method = "POST"
@@ -184,11 +184,11 @@ resource "google_cloud_run_v2_job" "initialdownloader" {
 }
 
 resource "google_cloud_scheduler_job" "initialdownloader_schedule" {
-  name             = "initialdownloader-schedule"
-  description      = "Trigger Initial Downloader Weekly on Sun 15:00 CET"
-  schedule         = "0 15 * * 0"
-  time_zone        = "CET"
-  region           = var.region
+  name        = "initialdownloader-schedule"
+  description = "Trigger Initial Downloader Weekly on Sun 15:00 CET"
+  schedule    = "0 15 * * 0"
+  time_zone   = "CET"
+  region      = var.region
 
   http_target {
     http_method = "POST"
@@ -207,6 +207,7 @@ resource "google_cloud_run_v2_job" "trainer" {
 
   template {
     template {
+      timeout = "1200s" # 20 minutes
       containers {
         image = "${var.region}-docker.pkg.dev/${var.project_id}/${var.artifact_registry_repo}/trainer:latest"
         env {
@@ -226,11 +227,11 @@ resource "google_cloud_run_v2_job" "trainer" {
 }
 
 resource "google_cloud_scheduler_job" "trainer_schedule" {
-  name             = "trainer-schedule"
-  description      = "Trigger Markov Regime Trainer Job Daily at 02:00 CET"
-  schedule         = "0 2 * * *"
-  time_zone        = "CET"
-  region           = var.region
+  name        = "trainer-schedule"
+  description = "Trigger Markov Regime Trainer Job Daily at 02:00 CET"
+  schedule    = "0 2 * * *"
+  time_zone   = "CET"
+  region      = var.region
 
   http_target {
     http_method = "POST"
