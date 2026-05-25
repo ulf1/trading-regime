@@ -60,7 +60,7 @@ def main():
     new_tickers = [t for t in scraped_tickers if t not in existing_tickers]
     tmp = [t for t in DEFAULT_TICKERS if t not in existing_tickers]
     if len(tmp) > 0:
-        new_tickers = new_tickers + random.sample(tmp, k=min(50, len(tmp)))
+        new_tickers = new_tickers + random.sample(tmp, k=min(100, len(tmp)))
     new_tickers = list(set(new_tickers))
     
     if not new_tickers:
