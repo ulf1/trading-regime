@@ -21,3 +21,8 @@ docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/findticker:latest
 # Build & Push initialdownloader
 docker build --no-cache -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/initialdownloader:latest ./initialdownloader
 docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/initialdownloader:latest
+
+# Build & Push trainer
+docker build --no-cache -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/trainer:latest ./trainer
+docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/trainer:latest
+

@@ -10,6 +10,7 @@ The project is structured as a mono-repo containing the following main component
 *   **`tickerchecker/`**: Weekly health checker that flags, logs, and cleans up dead or stale tickers.
 *   **`findticker/`**: Daily ticker discovery job that scrapes Yahoo Finance's most-active list to discover new active stocks.
 *   **`initialdownloader/`**: Scheduled job that ensures all active tickers have at least 2,000 historical price points.
+*   **`trainer/`**: Daily model training pipeline utilizing a vectorized PyTorch Markov Regime-Switching model.
 *   **`infra/`**: Infrastructure-as-Code using Terraform to provision GCP resources (GCS Buckets, Cloud Run Jobs, Cloud Scheduler, Artifact Registry).
 *   **`specs/`**: Technical specification documents for all pipelines.
 
@@ -35,6 +36,9 @@ cd ../findticker && uv run pytest tests/
 
 # Initial Downloader Tests
 cd ../initialdownloader && uv run pytest tests/
+
+# Model Trainer Tests
+cd ../trainer && uv run pytest tests/
 ```
 
 ### 2. Configure Terraform Variables
