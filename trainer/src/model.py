@@ -101,10 +101,12 @@ class MarkovRegimeSwitching(nn.Module):
             log_likelihood = log_likelihood + torch.log(marginal_density.squeeze(1) + eps)
             prev_xi = current_xi
             
-        # Total negative log-likelihood across all series
-        total_nll = -log_likelihood.sum()
+        # Individual NLL per series (shape: N) and overall total NLL (scalar)
+        individual_nlls = -log_likelihood
+        total_nll = individual_nlls.sum()
         
-        return total_nll, filtered_probs
+        return total_nll, filtered_probs, individual_nlls
+
 
     @torch.no_grad()
     def sort_regimes(self) -> None:
@@ -163,7 +165,8 @@ def train_mrs_model(
         optimizer.zero_grad(set_to_none=True)
         
         # Forward pass
-        loss, _ = model(y)
+        loss, _, _ = model(y)
+
         
         # Backpropagation
         loss.backward()

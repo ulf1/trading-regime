@@ -34,7 +34,7 @@ def test_model_forward_shape_and_nll():
     # Generate dummy data
     y = torch.randn(T, N)
     
-    total_nll, filtered_probs = model(y)
+    total_nll, filtered_probs, individual_nlls = model(y)
     
     # Negative log likelihood should be a scalar tensor
     assert total_nll.ndim == 0
@@ -42,6 +42,10 @@ def test_model_forward_shape_and_nll():
     
     # Filtered probabilities shape: (T, N, K)
     assert filtered_probs.shape == (T, N, K)
+    
+    # Individual NLLs shape: (N,)
+    assert individual_nlls.shape == (N,)
+
     assert filtered_probs.dtype == torch.float64
     
     # Elements of filtered probabilities should sum to 1.0 per step per series
@@ -78,7 +82,8 @@ def test_gradient_flow():
     y = torch.randn(T, N)
     
     # Verify autograd graphs are connected properly
-    total_nll, _ = model(y)
+    total_nll, _, _ = model(y)
+
     total_nll.backward()
     
     # Check model parameters received non-zero gradients

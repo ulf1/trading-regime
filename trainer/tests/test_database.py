@@ -95,7 +95,7 @@ def test_fetch_active_tickers_data(temp_prices_db):
 def test_results_storage_and_warm_start(temp_forecasts_db):
     results = [
         (
-            "2026-05-03", "AAPL", 0.001, -3.5,
+            "2026-05-03", "AAPL", 120.5, 0.001, -3.5,
             0.9, 0.05, 0.05,
             0.05, 0.9, 0.05,
             0.05, 0.05, 0.9,
@@ -103,6 +103,7 @@ def test_results_storage_and_warm_start(temp_forecasts_db):
             0.8, 0.1, 0.1
         )
     ]
+
     
     upsert_training_results(temp_forecasts_db, results)
     

@@ -26,9 +26,11 @@ def init_forecasts_db(db_path: str) -> None:
     CREATE TABLE IF NOT EXISTS training_results (
         current_date DATE,
         ticker TEXT,
+        nll DOUBLE PRECISION,
         mu DOUBLE PRECISION,
         raw_sigma DOUBLE PRECISION,
         p_00 DOUBLE PRECISION,
+
         p_01 DOUBLE PRECISION,
         p_02 DOUBLE PRECISION,
         p_10 DOUBLE PRECISION,
@@ -162,14 +164,15 @@ def upsert_training_results(forecasts_db_path: str, results: List[Tuple]) -> Non
     
     cursor.executemany("""
         INSERT INTO training_results (
-            current_date, ticker, mu, raw_sigma,
+            current_date, ticker, nll, mu, raw_sigma,
             p_00, p_01, p_02,
             p_10, p_11, p_12,
             p_20, p_21, p_22,
             t_window, last_price_date, last_price_value,
             proba_1d_0, proba_1d_1, proba_1d_2
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     """, results)
+
     
     conn.commit()
     conn.close()

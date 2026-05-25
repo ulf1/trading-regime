@@ -166,7 +166,8 @@ def main():
     trained_model.eval()
     with torch.no_grad():
         mu, sigma, trans_mat = trained_model.get_constrained_params()
-        _, filtered_probs = trained_model(y_tensor)
+        _, filtered_probs, individual_nlls = trained_model(y_tensor)
+
         
         # Latest filtered probabilities: shape (N, 3)
         last_state_prob = filtered_probs[-1]
@@ -192,9 +193,13 @@ def main():
         p_next_1 = next_state_prob[idx, 1].item()
         p_next_2 = next_state_prob[idx, 2].item()
         
+        # Individual negative log-likelihood
+        ticker_nll = individual_nlls[idx].item()
+        
         results_list.append((
             last_data_dt,
             ticker,
+            ticker_nll,
             ticker_mu,
             ticker_raw_sigma,
             p[0, 0].item(), p[0, 1].item(), p[0, 2].item(), # State 0 transitions

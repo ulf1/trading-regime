@@ -74,13 +74,18 @@ def test_main_pipeline_triggered_flow(mock_upload, mock_download, clean_env, tmp
         assert runs[0] == ("2026-05-09", "completed")
         
         # Should record model training outputs for both tickers AAPL and MSFT
-        cursor.execute("SELECT ticker, last_price_date, mu FROM training_results;")
+        cursor.execute("SELECT ticker, last_price_date, mu, nll FROM training_results;")
         results = cursor.fetchall()
         assert len(results) == 2
         tickers = {r[0] for r in results}
         assert tickers == {"AAPL", "MSFT"}
         
+        # NLL should be stored and be a positive number
+        for r in results:
+            assert r[3] > 0.0
+            
         conn.close()
+
 
 @patch("main.download_file_from_gcs")
 @patch("main.upload_file_to_gcs")
