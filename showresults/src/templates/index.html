@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Regime Forecasts Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Link Custom Premium Glassmorphic Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header Section -->
+        <header class="dashboard-header">
+            <div class="header-logo">
+                <span class="logo-pulse"></span>
+                <h1>Trading Regime Forecasts</h1>
+            </div>
+            <p class="subtitle">Real-time vectorized Markov Regime-Switching forecasts (Daily Autograd Retraining)</p>
+        </header>
+
+        <!-- Stats Overview Row -->
+        <div class="stats-grid">
+            <div class="stats-card">
+                <div class="stats-label">Total Tickers</div>
+                <div class="stats-value">{{ total_tickers }}</div>
+                <div class="stats-footer">Tracked daily</div>
+            </div>
+            <div class="stats-card bullish-card">
+                <div class="stats-label">Bullish Regimes</div>
+                <div class="stats-value text-bull">{{ bull_count }}</div>
+                <div class="stats-footer">Spread > +20%</div>
+            </div>
+            <div class="stats-card bear-card">
+                <div class="stats-label">Bearish Regimes</div>
+                <div class="stats-value text-bear">{{ bear_count }}</div>
+                <div class="stats-footer">Spread < -20%</div>
+            </div>
+            <div class="stats-card neutral-card">
+                <div class="stats-label">Neutral / Mixed</div>
+                <div class="stats-value text-neutral">{{ neutral_count }}</div>
+                <div class="stats-footer">Sideways / Stable</div>
+            </div>
+        </div>
+
+        <!-- Filter Controls Card -->
+        <div class="controls-card glass-panel">
+            <div class="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" id="tickerSearch" placeholder="Search by Ticker symbol (e.g. AAPL, BTC-USD)..." autocomplete="off">
+            </div>
+            <div class="filter-metrics">
+                <span id="resultsCount">Showing all {{ forecasts|length }} tickers</span>
+            </div>
+        </div>
+
+        <!-- Interactive Data Grid -->
+        <div class="table-container glass-panel">
+            <table class="forecasts-table" id="forecastsTable">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0, 'string')">Ticker <span class="sort-indicator"></span></th>
+                        <th onclick="sortTable(1, 'number')">NLL <span class="sort-indicator"></span></th>
+                        <th onclick="sortTable(2, 'number')">Mu0 (Bull) % <span class="sort-indicator"></span></th>
+                        <th onclick="sortTable(3, 'number')">Mu1 (Neut) % <span class="sort-indicator"></span></th>
+                        <th onclick="sortTable(4, 'number')">Mu2 (Bear) % <span class="sort-indicator"></span></th>
+                        <th onclick="sortTable(5, 'number')">Proba0 % <span class="sort-indicator"></span></th>
+                        <th onclick="sortTable(6, 'number')">Proba1 % <span class="sort-indicator"></span></th>
+                        <th onclick="sortTable(7, 'number')">Proba2 % <span class="sort-indicator"></span></th>
+                        <th onclick="sortTable(8, 'number')" class="sort-active-desc">Proba0 - Proba2 <span class="sort-indicator desc"></span></th>
+                        <th onclick="sortTable(9, 'string')">Last Data Date <span class="sort-indicator"></span></th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    {% for f in forecasts %}
+                    <tr class="table-row">
+                        <td class="ticker-col"><strong>{{ f.ticker }}</strong></td>
+                        <td class="number-col">{{ f.nll if f.nll is not none else '—' }}</td>
+                        <td class="number-col">{{ f.mu_0 if f.mu_0 is not none else '—' }}%</td>
+                        <td class="number-col">{{ f.mu_1 if f.mu_1 is not none else '—' }}%</td>
+                        <td class="number-col text-bear">{{ f.mu_2 if f.mu_2 is not none else '—' }}%</td>
+                        <td class="number-col">{{ f.proba_0 if f.proba_0 is not none else '—' }}%</td>
+                        <td class="number-col">{{ f.proba_1 if f.proba_1 is not none else '—' }}%</td>
+                        <td class="number-col">{{ f.proba_2 if f.proba_2 is not none else '—' }}%</td>
+                        <td class="number-col font-bold">
+                            {% if f.proba_spread is not none %}
+                                {% if f.proba_spread > 20 %}
+                                    <span class="badge badge-bull">+{{ f.proba_spread }}%</span>
+                                {% elif f.proba_spread < -20 %}
+                                    <span class="badge badge-bear">{{ f.proba_spread }}%</span>
+                                {% else %}
+                                    <span class="badge badge-neutral">{% if f.proba_spread > 0 %}+{% endif %}{{ f.proba_spread }}%</span>
+                                {% endif %}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td class="date-col">{{ f.last_price_date if f.last_price_date else '—' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <footer class="dashboard-footer">
+            <p>Trading Regime Ingestion Pipeline. Google Cloud Platform Production Environment.</p>
+        </footer>
+    </div>
+
+    <!-- Client-Side Search and Interactive Header Sorting JS Scripts -->
+    <script>
+        // 1. Interactive Real-Time Search Logic
+        const searchInput = document.getElementById('tickerSearch');
+        const resultsCountLabel = document.getElementById('resultsCount');
+        const tableBody = document.getElementById('tableBody');
+        const rows = Array.from(tableBody.getElementsByClassName('table-row'));
+
+        searchInput.addEventListener('input', () => {
+            const query = searchInput.value.trim().toUpperCase();
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const tickerText = row.getElementsByClassName('ticker-col')[0].textContent.toUpperCase();
+                if (tickerText.includes(query)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            if (query.length > 0) {
+                resultsCountLabel.textContent = `Found ${visibleCount} matching tickers`;
+            } else {
+                resultsCountLabel.textContent = `Showing all ${rows.length} tickers`;
+            }
+        });
+
+        // 2. Client-Side Interactive Column Sorting Logic
+        let sortDirections = {};
+        
+        // Initialize default descending sort on 'Proba0 - Proba2' column (index 8)
+        sortDirections[8] = 'desc';
+
+        function sortTable(columnIndex, type) {
+            const currentDir = sortDirections[columnIndex] === 'asc' ? 'desc' : 'asc';
+            sortDirections = {}; // Clear others
+            sortDirections[columnIndex] = currentDir;
+
+            const sortedRows = rows.sort((rowA, rowB) => {
+                let cellA = rowA.getElementsByTagName('td')[columnIndex].textContent.trim();
+                let cellB = rowB.getElementsByTagName('td')[columnIndex].textContent.trim();
+
+                // Strip percentage signs and badge signs for proper numeric comparison
+                if (type === 'number') {
+                    cellA = parseFloat(cellA.replace(/[%+]/g, '')) || 0;
+                    cellB = parseFloat(cellB.replace(/[%+]/g, '')) || 0;
+                    return currentDir === 'asc' ? cellA - cellB : cellB - cellA;
+                } else {
+                    // String fallback
+                    return currentDir === 'asc' 
+                        ? cellA.localeCompare(cellB) 
+                        : cellB.localeCompare(cellA);
+                }
+            });
+
+            // Re-render table contents
+            sortedRows.forEach(row => tableBody.appendChild(row));
+
+            // Reset all column indicators
+            const headers = document.querySelectorAll('#forecastsTable th');
+            headers.forEach(h => {
+                h.classList.remove('sort-active-asc', 'sort-active-desc');
+                const indicator = h.querySelector('.sort-indicator');
+                if (indicator) indicator.className = 'sort-indicator';
+            });
+
+            // Set current sorted header indicator
+            const currentHeader = headers[columnIndex];
+            currentHeader.classList.add(currentDir === 'asc' ? 'sort-active-asc' : 'sort-active-desc');
+            const currentIndicator = currentHeader.querySelector('.sort-indicator');
+            if (currentIndicator) {
+                currentIndicator.classList.add(currentDir);
+            }
+        }
+    </script>
+</body>
+</html>
