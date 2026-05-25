@@ -25,7 +25,7 @@ class MarkovRegimeSwitching(nn.Module):
         self.mu = nn.Parameter(torch.tensor([[0.02, 0.0, -0.2] for _ in range(num_series)], dtype=torch.float64))
         
         # Log of standard deviations to ensure variance is strictly positive: shape (N, K)
-        self.raw_sigma = nn.Parameter(torch.zeros(num_series, num_states), dtype=torch.float64)
+        self.raw_sigma = nn.Parameter(torch.zeros(num_series, num_states, dtype=torch.float64))
         
         # Unconstrained logits for transition probability matrix: shape (N, K, K)
         # Raw value raw_trans_mat[i, j, k] corresponds to transition from state j to state k
