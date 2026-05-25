@@ -26,3 +26,8 @@ docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/initialdownloader:latest
 docker build --no-cache -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/trainer:latest ./trainer
 docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/trainer:latest
 
+# Build & Push showresults
+docker build --no-cache -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/showresults:latest ./showresults
+docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/showresults:latest
+
+

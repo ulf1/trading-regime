@@ -242,3 +242,38 @@ resource "google_cloud_scheduler_job" "trainer_schedule" {
   }
 }
 
+# 6. Show Results Web Service
+resource "google_cloud_run_v2_service" "showresults" {
+  name     = "showresults-service"
+  location = var.region
+  ingress  = "INGRESS_TRAFFIC_ALL"
+
+  template {
+    containers {
+      image = "${var.region}-docker.pkg.dev/${var.project_id}/${var.artifact_registry_repo}/showresults:latest"
+      env {
+        name  = "GCS_BUCKET_NAME"
+        value = google_storage_bucket.market_data.name
+      }
+      resources {
+        limits = {
+          memory = "1Gi"
+          cpu    = "1"
+        }
+      }
+      ports {
+        container_port = 8080
+      }
+    }
+    service_account = google_service_account.job_sa.email
+  }
+}
+
+resource "google_cloud_run_v2_service_iam_member" "showresults_public" {
+  name     = google_cloud_run_v2_service.showresults.name
+  location = google_cloud_run_v2_service.showresults.location
+  role     = "roles/run.viewer"
+  member   = "allUsers"
+}
+
+
