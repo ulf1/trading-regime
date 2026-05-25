@@ -199,3 +199,46 @@ resource "google_cloud_scheduler_job" "initialdownloader_schedule" {
     }
   }
 }
+
+# 5. Markov Regime Trainer (Daily 02:00 CET)
+resource "google_cloud_run_v2_job" "trainer" {
+  name     = "trainer-job"
+  location = var.region
+
+  template {
+    template {
+      containers {
+        image = "${var.region}-docker.pkg.dev/${var.project_id}/${var.artifact_registry_repo}/trainer:latest"
+        env {
+          name  = "GCS_BUCKET_NAME"
+          value = google_storage_bucket.market_data.name
+        }
+        resources {
+          limits = {
+            memory = "4Gi"
+            cpu    = "2"
+          }
+        }
+      }
+      service_account = google_service_account.job_sa.email
+    }
+  }
+}
+
+resource "google_cloud_scheduler_job" "trainer_schedule" {
+  name             = "trainer-schedule"
+  description      = "Trigger Markov Regime Trainer Job Daily at 02:00 CET"
+  schedule         = "0 2 * * *"
+  time_zone        = "CET"
+  region           = var.region
+
+  http_target {
+    http_method = "POST"
+    uri         = "https://${var.region}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${var.project_id}/jobs/trainer-job:run"
+
+    oauth_token {
+      service_account_email = google_service_account.job_sa.email
+    }
+  }
+}
+

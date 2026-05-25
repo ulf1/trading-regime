@@ -103,7 +103,7 @@ class MarkovRegimeSwitching(nn.Module):
             
         # Individual NLL per series (shape: N) and overall total NLL (scalar)
         individual_nlls = -log_likelihood
-        total_nll = individual_nlls.sum()
+        total_nll = individual_nlls.mean()
         
         return total_nll, filtered_probs, individual_nlls
 
@@ -141,7 +141,7 @@ class MarkovRegimeSwitching(nn.Module):
 def train_mrs_model(
     model: MarkovRegimeSwitching, 
     y: torch.Tensor, 
-    epochs: int = 150, 
+    epochs: int = 600, 
     lr: float = 0.05
 ) -> Tuple[MarkovRegimeSwitching, List[float]]:
     """
