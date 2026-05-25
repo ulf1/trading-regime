@@ -138,11 +138,33 @@ class MarkovRegimeSwitching(nn.Module):
         self.raw_trans_mat.data = torch.gather(temp, 2, idx_cols)
 
 
+def occupancy_prior(
+    state_probs: torch.Tensor,
+    target: Tuple[float, float, float] = (0.3, 0.4, 0.3),
+    lam: float = 50.0
+) -> torch.Tensor:
+    """
+    Calculates a Bayesian-style occupancy prior penalty.
+    Penalizes the deviation of the mean state probabilities from a target distribution.
+    """
+    occ = state_probs.mean(0)
+    
+    target_tensor = torch.tensor(
+        target,
+        device=occ.device,
+        dtype=occ.dtype
+    )
+    
+    return lam * ((occ - target_tensor)**2).mean()
+
+
 def train_mrs_model(
     model: MarkovRegimeSwitching, 
     y: torch.Tensor, 
     epochs: int = 600, 
-    lr: float = 0.05
+    lr: float = 0.05,
+    lam: float = 50.0,
+    target_occ: Tuple[float, float, float] = (0.3, 0.4, 0.3)
 ) -> Tuple[MarkovRegimeSwitching, List[float]]:
     """
     Standard training pipeline for the Markov Regime-Switching model using the Adam optimizer.
@@ -152,6 +174,8 @@ def train_mrs_model(
         y: Observation tensor of shape (T, N).
         epochs: Number of training iterations.
         lr: Learning rate for the optimizer.
+        lam: Lambda scaling factor for the occupancy prior penalty.
+        target_occ: Target state occupancies.
         
     Returns:
         model: The trained model (in-place modification).
@@ -165,8 +189,11 @@ def train_mrs_model(
         optimizer.zero_grad(set_to_none=True)
         
         # Forward pass
-        loss, _, _ = model(y)
+        nll, filtered_probs, _ = model(y)
 
+        # Occupancy Penalty
+        penalty = occupancy_prior(filtered_probs, target=target_occ, lam=lam)
+        loss = nll + penalty
         
         # Backpropagation
         loss.backward()

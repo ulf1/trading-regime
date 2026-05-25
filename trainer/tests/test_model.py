@@ -1,6 +1,6 @@
 import pytest
 import torch
-from model import MarkovRegimeSwitching, train_mrs_model
+from model import MarkovRegimeSwitching, train_mrs_model, occupancy_prior
 
 
 # Force float64 for absolute numerical stability as required by the model
@@ -117,3 +117,33 @@ def test_model_determinism():
     torch.testing.assert_close(model1.mu, model2.mu)
     torch.testing.assert_close(model1.raw_sigma, model2.raw_sigma)
     torch.testing.assert_close(model1.raw_trans_mat, model2.raw_trans_mat)
+
+def test_occupancy_prior():
+    T, N, K = 100, 5, 3
+    
+    # Create perfect match probabilities
+    probs = torch.zeros(T, N, K, dtype=torch.float64)
+    probs[:, :, 0] = 0.3
+    probs[:, :, 1] = 0.4
+    probs[:, :, 2] = 0.3
+    
+    # Penalty should be exactly 0
+    penalty = occupancy_prior(probs, target=(0.3, 0.4, 0.3), lam=50.0)
+    torch.testing.assert_close(penalty, torch.tensor(0.0, dtype=torch.float64))
+    
+    # Create deviating probabilities
+    probs_bad = torch.zeros(T, N, K, dtype=torch.float64)
+    probs_bad[:, :, 0] = 0.5
+    probs_bad[:, :, 1] = 0.5
+    probs_bad[:, :, 2] = 0.0
+    
+    penalty_bad = occupancy_prior(probs_bad, target=(0.3, 0.4, 0.3), lam=50.0)
+    
+    # Mean over 0 gives (0.5, 0.5, 0.0) for each of the N series.
+    # Deviation from target: (0.2, 0.1, -0.3)
+    # Squared dev: (0.04, 0.01, 0.09) -> sum per series = 0.14
+    # Mean over N series and K states: 0.14 / K = 0.04666...
+    # Lam = 50.0 -> penalty = 50.0 * 0.14 / 3 = 2.3333...
+    
+    expected_penalty = 50.0 * (0.2**2 + 0.1**2 + 0.3**2) / K
+    torch.testing.assert_close(penalty_bad, torch.tensor(expected_penalty, dtype=torch.float64))

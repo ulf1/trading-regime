@@ -39,6 +39,9 @@ cd ../initialdownloader && uv run pytest tests/
 
 # Model Trainer Tests
 cd ../trainer && uv run pytest tests/
+
+# Results Dashboard Tests
+cd ../showresults && uv run pytest tests/
 ```
 
 ### 2. Configure Terraform Variables
