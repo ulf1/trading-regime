@@ -272,7 +272,7 @@ resource "google_cloud_run_v2_service" "showresults" {
 resource "google_cloud_run_v2_service_iam_member" "showresults_public" {
   name     = google_cloud_run_v2_service.showresults.name
   location = google_cloud_run_v2_service.showresults.location
-  role     = "roles/run.viewer"
+  role     = "roles/run.invoker"
   member   = "allUsers"
 }
 

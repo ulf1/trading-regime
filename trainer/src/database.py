@@ -103,6 +103,8 @@ def fetch_active_tickers_data(prices_db_path: str, last_data_dt: str, window_siz
     
     Returns:
         A list of tuples: (ticker, date, adj_close)
+    
+    WARNING: Anti-chronological order!
     """
     conn = sqlite3.connect(prices_db_path)
     cursor = conn.cursor()

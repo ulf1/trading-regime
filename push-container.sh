@@ -29,5 +29,5 @@ docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/trainer:latest
 # Build & Push showresults
 docker build --no-cache -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/showresults:latest ./showresults
 docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/showresults:latest
-
-
+# Force Cloud Run Service to pull the latest image and deploy a new revision
+gcloud run services update showresults-service --image $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/showresults:latest --region $REGION --project $PROJECT_ID

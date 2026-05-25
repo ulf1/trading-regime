@@ -99,7 +99,7 @@ def main():
     
     # 2. Query last dates and verify trigger logic
     last_data_dt = get_latest_prices_date(PRICES_DB)
-    last_run_dt = get_latest_training_date(FORECASTS_DB)
+    last_run_dt = get_latest_training_date(FORECASTS_DB) # canbe None on first run
     
     logger.info(f"Latest prices date (last_data_dt): {last_data_dt}")
     logger.info(f"Latest completed training date (last_run_dt): {last_run_dt}")
@@ -107,10 +107,11 @@ def main():
     if not last_data_dt:
         logger.error("No historical data found in prices.db. Exiting.")
         return
-        
-    # Check trigger: last_data_dt > last_run_dt + 1 day
-    if last_run_dt:
+    elif not last_run_dt:
+        logger.info("No previous training run found. Proceeding with training.")
+    else: 
         try:
+            # Check trigger: last_data_dt > last_run_dt + 1 day
             dt_data = datetime.strptime(last_data_dt, "%Y-%m-%d")
             dt_run = datetime.strptime(last_run_dt, "%Y-%m-%d")
             delta = dt_data - dt_run
@@ -119,7 +120,8 @@ def main():
                 return
         except ValueError as e:
             logger.error(f"Error parsing dates: {e}. Proceeding with training anyway.")
-    
+
+
     # 3. Trigger training run
     insert_training_run(FORECASTS_DB, last_data_dt)
     
@@ -131,6 +133,8 @@ def main():
         return
         
     df_raw = pd.DataFrame(raw_records, columns=["ticker", "date", "adj_close"])
+    # df_raw is anti-chronological, so reverse it
+    df_raw.sort_values(by=["ticker", "date"], ascending=[True, False], inplace=True)
     
     # Get last price mapping for outputs
     df_last_price = df_raw.groupby("ticker").last().reset_index()
