@@ -74,7 +74,7 @@ def test_main_pipeline_triggered_flow(mock_upload, mock_download, clean_env, tmp
         assert runs[0] == ("2026-05-09", "completed")
         
         # Should record model training outputs for both tickers AAPL and MSFT
-        cursor.execute("SELECT ticker, last_price_date, mu_0, mu_1, mu_2, nll FROM training_results;")
+        cursor.execute("SELECT ticker, last_price_date, raw_mu_0, raw_mu_1, raw_mu_2, nll FROM training_results;")
         results = cursor.fetchall()
         assert len(results) == 2
         tickers = {r[0] for r in results}

@@ -27,9 +27,9 @@ def init_forecasts_db(db_path: str) -> None:
         current_date DATE,
         ticker TEXT,
         nll DOUBLE PRECISION,
-        mu_0 DOUBLE PRECISION,
-        mu_1 DOUBLE PRECISION,
-        mu_2 DOUBLE PRECISION,
+        raw_mu_0 DOUBLE PRECISION,
+        raw_mu_1 DOUBLE PRECISION,
+        raw_mu_2 DOUBLE PRECISION,
         raw_sigma_0 DOUBLE PRECISION,
         raw_sigma_1 DOUBLE PRECISION,
         raw_sigma_2 DOUBLE PRECISION,
@@ -172,7 +172,7 @@ def upsert_training_results(forecasts_db_path: str, results: List[Tuple]) -> Non
     cursor.executemany("""
         INSERT INTO training_results (
             current_date, ticker, nll,
-            mu_0, mu_1, mu_2,
+            raw_mu_0, raw_mu_1, raw_mu_2,
             raw_sigma_0, raw_sigma_1, raw_sigma_2,
             p_00, p_01, p_02,
             p_10, p_11, p_12,
@@ -197,7 +197,7 @@ def fetch_last_training_results(forecasts_db_path: str, last_run_dt: str) -> dic
     try:
         cursor.execute("""
             SELECT ticker, 
-                   mu_0, mu_1, mu_2,
+                   raw_mu_0, raw_mu_1, raw_mu_2,
                    raw_sigma_0, raw_sigma_1, raw_sigma_2,
                    p_00, p_01, p_02,
                    p_10, p_11, p_12,
@@ -211,9 +211,9 @@ def fetch_last_training_results(forecasts_db_path: str, last_run_dt: str) -> dic
         results = {}
         for r in rows:
             results[r[0]] = {
-                'mu_0': r[1],
-                'mu_1': r[2],
-                'mu_2': r[3],
+                'raw_mu_0': r[1],
+                'raw_mu_1': r[2],
+                'raw_mu_2': r[3],
                 'raw_sigma_0': r[4],
                 'raw_sigma_1': r[5],
                 'raw_sigma_2': r[6],

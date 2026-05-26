@@ -24,27 +24,26 @@ def fetch_batch_data(tickers: List[str], period: str = "10d", interval: str = "1
             processed_dfs = []
             
             # Handle multi-index columns if multiple tickers, else single ticker format
-            if len(tickers) > 1:
+            if isinstance(data.columns, pd.MultiIndex):
                 for ticker in tickers:
                     if ticker in data.columns.levels[0]:
                         ticker_df = data[ticker].copy()
                         if 'Adj Close' in ticker_df.columns:
                             ticker_df = ticker_df[['Adj Close']].dropna()
-                            ticker_df = ticker_df.reset_index()
+                            # Directly extract dates from DatetimeIndex to avoid KeyError: 'Date'
+                            ticker_df['date'] = pd.to_datetime(ticker_df.index).strftime('%Y-%m-%d')
                             ticker_df['ticker'] = ticker
-                            # Ensure date is string format (YYYY-MM-DD)
-                            ticker_df['Date'] = ticker_df['Date'].dt.strftime('%Y-%m-%d')
-                            ticker_df = ticker_df.rename(columns={'Date': 'date', 'Adj Close': 'adj_close'})
-                            processed_dfs.append(ticker_df)
+                            ticker_df = ticker_df.rename(columns={'Adj Close': 'adj_close'})
+                            processed_dfs.append(ticker_df[['date', 'ticker', 'adj_close']])
             else:
                 ticker = tickers[0]
                 if 'Adj Close' in data.columns:
                     ticker_df = data[['Adj Close']].dropna().copy()
-                    ticker_df = ticker_df.reset_index()
+                    # Directly extract dates from DatetimeIndex to avoid KeyError: 'Date'
+                    ticker_df['date'] = pd.to_datetime(ticker_df.index).strftime('%Y-%m-%d')
                     ticker_df['ticker'] = ticker
-                    ticker_df['Date'] = ticker_df['Date'].dt.strftime('%Y-%m-%d')
-                    ticker_df = ticker_df.rename(columns={'Date': 'date', 'Adj Close': 'adj_close'})
-                    processed_dfs.append(ticker_df)
+                    ticker_df = ticker_df.rename(columns={'Adj Close': 'adj_close'})
+                    processed_dfs.append(ticker_df[['date', 'ticker', 'adj_close']])
                     
             if not processed_dfs:
                 return pd.DataFrame()

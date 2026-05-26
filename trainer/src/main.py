@@ -63,13 +63,13 @@ def warm_start_model(model: MarkovRegimeSwitching, tickers: list[str], previous_
         for idx, ticker in enumerate(tickers):
             if ticker in previous_params:
                 params = previous_params[ticker]
-                # mu: (N, K)
+                # raw_mu: (N, K)
                 # raw_sigma: (N, K)
                 # raw_trans_mat: (N, K, K)
-                # Warm start all 3 states of mu
-                model.mu[idx, 0] = params['mu_0']
-                model.mu[idx, 1] = params['mu_1']
-                model.mu[idx, 2] = params['mu_2']
+                # Warm start all 3 states of raw_mu
+                model.raw_mu[idx, 0] = params['raw_mu_0']
+                model.raw_mu[idx, 1] = params['raw_mu_1']
+                model.raw_mu[idx, 2] = params['raw_mu_2']
                 
                 # Warm start all 3 states of raw_sigma
                 model.raw_sigma[idx, 0] = params['raw_sigma_0']
@@ -133,8 +133,7 @@ def main():
         return
         
     df_raw = pd.DataFrame(raw_records, columns=["ticker", "date", "adj_close"])
-    # df_raw is anti-chronological, so reverse it
-    df_raw.sort_values(by=["ticker", "date"], ascending=[True, False], inplace=True)
+    df_raw.sort_values(by=["ticker", "date"], ascending=[True, True], inplace=True)  # df_raw is anti-chronological, so reverse it
     
     # Get last price mapping for outputs
     df_last_price = df_raw.groupby("ticker").last().reset_index()
@@ -168,8 +167,7 @@ def main():
     logger.info("Training 3-state Markov Regime-Switching model via autograd...")
     trained_model, losses = train_mrs_model(model, y_tensor, epochs=150, lr=0.05)
     
-    # Sort states: State 0 = Bull, State 1 = Neutral, State 2 = Bear
-    trained_model.sort_regimes()
+
     
     # 8. Inference and forecasts
     logger.info("Performing final inference and 1-day ahead forecasting...")
@@ -191,10 +189,10 @@ def main():
         # Retrieve last price info
         last_date, last_val = last_price_map.get(ticker, (last_data_dt, 0.0))
         
-        # Extract all 3 states of mu
-        mu_0 = mu[idx, 0].item()
-        mu_1 = mu[idx, 1].item()
-        mu_2 = mu[idx, 2].item()
+        # Extract all 3 states of raw_mu
+        raw_mu_0 = trained_model.raw_mu[idx, 0].item()
+        raw_mu_1 = trained_model.raw_mu[idx, 1].item()
+        raw_mu_2 = trained_model.raw_mu[idx, 2].item()
         
         # Extract all 3 states of raw_sigma
         sig_0 = trained_model.raw_sigma[idx, 0].item()
@@ -216,9 +214,9 @@ def main():
             last_data_dt,
             ticker,
             ticker_nll,
-            mu_0,
-            mu_1,
-            mu_2,
+            raw_mu_0,
+            raw_mu_1,
+            raw_mu_2,
             sig_0,
             sig_1,
             sig_2,

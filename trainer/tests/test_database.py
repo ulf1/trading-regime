@@ -96,7 +96,7 @@ def test_results_storage_and_warm_start(temp_forecasts_db):
     results = [
         (
             "2026-05-03", "AAPL", 120.5, 
-            0.001, 0.0, -0.002,      # mu_0, mu_1, mu_2
+            0.001, 0.0, -0.002,      # raw_mu_0, raw_mu_1, raw_mu_2
             -3.5, -3.8, -4.0,       # raw_sigma_0, raw_sigma_1, raw_sigma_2
             0.9, 0.05, 0.05,
             0.05, 0.9, 0.05,
@@ -112,9 +112,9 @@ def test_results_storage_and_warm_start(temp_forecasts_db):
     params = fetch_last_training_results(temp_forecasts_db, "2026-05-03")
     
     assert "AAPL" in params
-    assert params["AAPL"]["mu_0"] == 0.001
-    assert params["AAPL"]["mu_1"] == 0.0
-    assert params["AAPL"]["mu_2"] == -0.002
+    assert params["AAPL"]["raw_mu_0"] == 0.001
+    assert params["AAPL"]["raw_mu_1"] == 0.0
+    assert params["AAPL"]["raw_mu_2"] == -0.002
     assert params["AAPL"]["raw_sigma_0"] == -3.5
     assert params["AAPL"]["raw_sigma_1"] == -3.8
     assert params["AAPL"]["raw_sigma_2"] == -4.0
