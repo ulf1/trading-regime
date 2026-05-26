@@ -1,6 +1,6 @@
 # Trading Regime Data Pipelines
 
-This project implements a set of daily and weekly data synchronization, discovery, and backfilling pipelines for market data (Yahoo Finance), running as GCP Cloud Run Jobs triggered by Cloud Scheduler.
+This project implements a set of daily and weekly data synchronization, discovery, and backfilling pipelines for market data (Yahoo Finance), running as GCP Cloud Run Jobs orchestrated by GCP Workflows and Cloud Scheduler.
 
 ## Project Structure
 
@@ -11,7 +11,7 @@ The project is structured as a mono-repo containing the following main component
 *   **`findticker/`**: Daily ticker discovery job that scrapes Yahoo Finance's most-active list to discover new active stocks.
 *   **`initialdownloader/`**: Scheduled job that ensures all active tickers have at least 2,000 historical price points.
 *   **`trainer/`**: Daily model training pipeline utilizing a vectorized PyTorch Markov Regime-Switching model.
-*   **`infra/`**: Infrastructure-as-Code using Terraform to provision GCP resources (GCS Buckets, Cloud Run Jobs, Cloud Scheduler, Artifact Registry).
+*   **`infra/`**: Infrastructure-as-Code using Terraform to provision GCP resources (GCS Buckets, Cloud Run Jobs, Cloud Scheduler, GCP Workflows, Artifact Registry).
 *   **`specs/`**: Technical specification documents for all pipelines.
 
 ---

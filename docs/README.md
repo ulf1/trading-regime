@@ -27,6 +27,7 @@ The following Mermaid diagram illustrates the global architecture, showing how C
 flowchart TB
     %% Styling and Theme
     classDef scheduler fill:#ea4335,stroke:#b31412,stroke-width:2px,color:#fff;
+    classDef workflow fill:#a142f4,stroke:#681da8,stroke-width:2px,color:#fff;
     classDef runJob fill:#1a73e8,stroke:#1557b0,stroke-width:2px,color:#fff;
     classDef storage fill:#fbbc05,stroke:#e3a209,stroke-width:2px,color:#202124;
     classDef web fill:#34a853,stroke:#137333,stroke-width:2px,color:#fff;
@@ -34,10 +35,11 @@ flowchart TB
 
     subgraph GCP Cloud Environment
         %% Schedulers
-        SyncSched["Cloud Scheduler <br> Daily 16:18 EST/EDT <br> (Mon-Fri)"]:::scheduler
-        FindSched["Cloud Scheduler <br> Daily 16:39 EST/EDT <br> (Mon-Fri)"]:::scheduler
+        DailyWorkflowSched["Cloud Scheduler <br> Daily 16:18 EST/EDT <br> (Mon-Fri)"]:::scheduler
         CheckSched["Cloud Scheduler <br> Weekly Sat 22:41 EST/EDT"]:::scheduler
-        TrainSched["Cloud Scheduler <br> Daily 16:57 EST/EDT <br> (Mon-Fri)"]:::scheduler
+
+        %% Workflows
+        DailyWorkflow["GCP Workflow <br> daily-pipeline-workflow"]:::workflow
 
         %% Cloud Run Jobs
         SyncJob["datasync-job <br> Cloud Run Job"]:::runJob
@@ -56,10 +58,12 @@ flowchart TB
     User[Web Client]:::client
 
     %% Ingestion Schedules to Jobs
-    SyncSched -->|Trigger POST| SyncJob
-    FindSched -->|Trigger POST| FindJob
+    DailyWorkflowSched -->|Trigger POST| DailyWorkflow
+    DailyWorkflow -->|1. Run & Wait| SyncJob
+    DailyWorkflow -->|2. Sleep 30s & Run| FindJob
+    DailyWorkflow -->|3. Sleep 30s & Run| TrainJob
+    
     CheckSched -->|Trigger POST| CheckJob
-    TrainSched -->|Trigger POST| TrainJob
 
     %% Cloud Storage interactions
     SyncJob <-->|Read/Write prices.db <br> Read tickers.csv| GCS
@@ -332,8 +336,6 @@ The system is built on GCP using Terraform to ensure absolute reproducibility an
 *   **Cloud Run Service:** The `showresults` dashboard is deployed as an auto-scaling serverless Cloud Run Service with public ingress (`allUsers` run invoker).
 *   **Unified Service Account:** A customized IAM Service Account `trading-regime-job-sa` is granted minimal-privilege GCS object admin access (`roles/storage.objectAdmin`) and Cloud Run invocation privileges to preserve zero-trust security.
 *   **Scheduling Cron Details:**
-    *   `datasync-job` $\rightarrow$ `18 16 * * 1-5` (Daily 16:18 EST/EDT, Mon-Fri)
-    *   `findticker-job` $\rightarrow$ `39 16 * * 1-5` (Daily 16:39 EST/EDT, Mon-Fri)
-    *   `trainer-job` $\rightarrow$ `57 16 * * 1-5` (Daily 16:57 EST/EDT, Mon-Fri)
+    *   `daily-pipeline-schedule` $\rightarrow$ `18 16 * * 1-5` (Daily 16:18 EST/EDT, Mon-Fri). This single scheduler triggers the **GCP Workflow** (`daily-pipeline-workflow`), which orchestrates `datasync-job`, `findticker-job`, and `trainer-job` sequentially with 30-second sleep intervals.
     *   `tickerchecker-job` $\rightarrow$ `41 22 * * 6` (Weekly Saturdays 22:41 EST/EDT)
     *   `initialdownloader-job` $\rightarrow$ `42 22 * * 0` (Weekly Sundays 22:42 EST/EDT)
