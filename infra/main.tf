@@ -43,6 +43,11 @@ resource "google_project_service" "workflows_api" {
   disable_on_destroy = false
 }
 
+resource "time_sleep" "wait_for_workflows_sa" {
+  depends_on      = [google_project_service.workflows_api]
+  create_duration = "30s"
+}
+
 # 1. Data Sync (Daily)
 resource "google_cloud_run_v2_job" "datasync" {
   name     = "datasync-job"
@@ -213,7 +218,10 @@ resource "google_workflows_workflow" "daily_pipeline" {
   description     = "Run datasync, findticker, trainer sequentially with 30s delays"
   service_account = google_service_account.job_sa.email
 
-  depends_on = [google_project_service.workflows_api]
+  depends_on = [
+    google_project_service.workflows_api,
+    time_sleep.wait_for_workflows_sa
+  ]
 
   source_contents = <<-EOF
   main:
