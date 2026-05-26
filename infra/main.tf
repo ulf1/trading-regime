@@ -59,9 +59,9 @@ resource "google_cloud_run_v2_job" "datasync" {
 
 resource "google_cloud_scheduler_job" "datasync_schedule" {
   name        = "datasync-schedule"
-  description = "Trigger Data Sync Job Daily"
-  schedule    = "0 1 * * *"
-  time_zone   = "CET"
+  description = "Trigger Data Sync Job Daily at 16:18 EST/EDT"
+  schedule    = "18 16 * * 1-5"
+  time_zone   = "America/New_York"
   region      = var.region
 
   http_target {
@@ -101,9 +101,9 @@ resource "google_cloud_run_v2_job" "tickerchecker" {
 
 resource "google_cloud_scheduler_job" "tickerchecker_schedule" {
   name        = "tickerchecker-schedule"
-  description = "Trigger Ticker Checker Weekly on Sat 19:00 CET"
-  schedule    = "0 19 * * 6"
-  time_zone   = "CET"
+  description = "Trigger Ticker Checker Weekly on Sat 22:41 EST/EDT"
+  schedule    = "41 22 * * 6"
+  time_zone   = "America/New_York"
   region      = var.region
 
   http_target {
@@ -143,9 +143,9 @@ resource "google_cloud_run_v2_job" "findticker" {
 
 resource "google_cloud_scheduler_job" "findticker_schedule" {
   name        = "findticker-schedule"
-  description = "Trigger Find Ticker Daily 22:00 CET"
-  schedule    = "0 22 * * *"
-  time_zone   = "CET"
+  description = "Trigger Find Ticker Daily 16:39 EST/EDT"
+  schedule    = "39 16 * * 1-5"
+  time_zone   = "America/New_York"
   region      = var.region
 
   http_target {
@@ -185,9 +185,9 @@ resource "google_cloud_run_v2_job" "initialdownloader" {
 
 resource "google_cloud_scheduler_job" "initialdownloader_schedule" {
   name        = "initialdownloader-schedule"
-  description = "Trigger Initial Downloader Weekly on Sun 15:00 CET"
-  schedule    = "0 15 * * 0"
-  time_zone   = "CET"
+  description = "Trigger Initial Downloader Weekly on Sun 22:42 EST/EDT"
+  schedule    = "42 22 * * 0"
+  time_zone   = "America/New_York"
   region      = var.region
 
   http_target {
@@ -228,9 +228,9 @@ resource "google_cloud_run_v2_job" "trainer" {
 
 resource "google_cloud_scheduler_job" "trainer_schedule" {
   name        = "trainer-schedule"
-  description = "Trigger Markov Regime Trainer Job Daily at 02:00 CET"
-  schedule    = "0 2 * * *"
-  time_zone   = "CET"
+  description = "Trigger Markov Regime Trainer Job Daily at 16:57 EST/EDT"
+  schedule    = "57 16 * * 1-5"
+  time_zone   = "America/New_York"
   region      = var.region
 
   http_target {

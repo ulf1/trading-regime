@@ -5,7 +5,7 @@ Implement a daily market data discovery pipeline that runs as a GCP Cloud Run Jo
 > To ensure database schema integrity and prevent ingestion crashes, this pipeline strictly restricts discovery to **standard stocks and equity instruments**. It dynamically filters out listed debt, professional segment bonds, warrants, preferreds, units, and futures before requesting history from yfinance or executing GCS synchronizations.
 
 # Architecture & Constraints
-- **Execution:** GCP Cloud Run Job triggered daily (e.g., at 22:00 CET) by Cloud Scheduler.
+- **Execution:** GCP Cloud Run Job triggered daily (e.g., at 16:39 EST/EDT, Mon-Fri) by Cloud Scheduler.
 - **Storage:** "Stateless" execution. The script MUST download `tickers.csv` and `prices.db` from a GCS bucket at startup, perform updates locally, and upload the updated files back to GCS upon completion. Do NOT use persistent volumes.
 - **Tech Stack:** Python 3.12. Strictly utilize `uv` (Skill 301) for dependency management and Docker caching. Required libraries: `requests`, `yfinance`, `pandas`, `google-cloud-storage`.
 
@@ -47,7 +47,7 @@ flowchart TD
     classDef finish fill:#ceead6,stroke:#137333,stroke-width:2px,color:#137333;
 
     %% Workflow Nodes
-    Start([Daily Trigger 22:00 CET]) --> Scheduler[GCP Cloud Scheduler]
+    Start([Daily Trigger 16:39 EST/EDT (Mon-Fri)]) --> Scheduler[GCP Cloud Scheduler]
     Scheduler --> Job[GCP Cloud Run Job Container]
     
     %% Startup Phase

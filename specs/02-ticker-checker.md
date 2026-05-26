@@ -2,7 +2,7 @@
 Implement a weekly ticker health check pipeline that runs as a GCP Cloud Run Job. It identifies dead or stale tickers by comparing local database state against `yfinance`, removes invalid tickers from the active list (`tickers.csv`), cleans up the `prices.db` SQLite database, and persists the changes to Google Cloud Storage.
 
 # Architecture & Constraints
-- **Execution:** GCP Cloud Run Job triggered weekly on Saturdays at 19:00 CET by Cloud Scheduler.
+- **Execution:** GCP Cloud Run Job triggered weekly on Saturdays at 22:41 EST/EDT by Cloud Scheduler.
 - **Storage:** "Stateless" execution. The script MUST download `prices.db`, `tickers.csv`, and `dead_tickers.csv` (if it exists) from a GCS bucket at startup, perform operations locally, and upload the updated files back to GCS upon completion. Do NOT use persistent volumes.
 - **Tech Stack:** Python 3.12. Strictly utilize `uv` (Skill 301) for dependency management and Docker caching. Do not use `requirements.txt`. Required libraries: `yfinance`, `pandas`, `google-cloud-storage`.
 
@@ -47,7 +47,7 @@ graph TD
     classDef finish fill:#ceead6,stroke:#137333,stroke-width:2px,color:#137333;
 
     %% Workflow Nodes
-    Start([Weekly Trigger - Sat 19:00 CET]) --> Scheduler[GCP Cloud Scheduler]
+    Start([Weekly Trigger - Sat 22:41 EST/EDT]) --> Scheduler[GCP Cloud Scheduler]
     Scheduler --> Job[GCP Cloud Run Job Container]
     
     %% Startup Phase
@@ -129,4 +129,4 @@ graph TD
 
 ## 6. Deployment
 - Provide the Python application code, the Dockerfile, and the Terraform code (using the `340-terraform` skill) required to deploy the Cloud Run Job and Cloud Scheduler.
-- All Terraform configurations are stored in the `infra/` directory. The schedule must be set to `0 19 * * 6` (Saturdays 19:00) using the `CET` timezone.
+- All Terraform configurations are stored in the `infra/` directory. The schedule must be set to `41 22 * * 6` (Saturdays 22:41) using the `America/New_York` timezone.

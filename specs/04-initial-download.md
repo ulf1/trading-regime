@@ -2,7 +2,7 @@
 Implement an initial download pipeline that runs as a GCP Cloud Run Job. It checks the number of price points in a SQLite database (`prices.db`) backed by Google Cloud Storage. If a ticker has less than 2000 price points, it downloads the missing price points via `yfinance` and stores them.
 
 # Architecture & Constraints
-- **Execution:** GCP Cloud Run Job triggered on a schedule (Sunday 15:00 CET) via Cloud Scheduler.
+- **Execution:** GCP Cloud Run Job triggered weekly on Sundays at 22:42 EST/EDT by Cloud Scheduler.
 - **Storage:** "Stateless" execution. The script MUST download `prices.db` from a GCS bucket at startup, perform database updates locally, and upload the updated `prices.db` back to GCS upon completion.
 - **Tech Stack:** Python 3.12. Strictly utilize `uv` (Skill 301) for dependency management and Docker caching. Required libraries: `yfinance`, `pandas`, `google-cloud-storage`.
 
@@ -38,7 +38,7 @@ graph TD
     classDef decision fill:#fce8e6,stroke:#c5221f,stroke-width:2px,color:#c5221f;
     classDef finish fill:#ceead6,stroke:#137333,stroke-width:2px,color:#137333;
 
-    Start([Scheduled Trigger - Sun 15:00 CET]) --> Scheduler[GCP Cloud Scheduler]
+    Start([Scheduled Trigger - Sun 22:42 EST/EDT]) --> Scheduler[GCP Cloud Scheduler]
     Scheduler --> Job[GCP Cloud Run Job Container]
     
     Job --> InitLog[Initialize Logging & GCS Client]

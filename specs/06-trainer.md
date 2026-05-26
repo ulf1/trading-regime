@@ -2,7 +2,7 @@
 Implement a daily machine learning model training pipeline that runs as a GCP Cloud Run Job. It trains a 3-state Markov Regime-Switching (MRS) model (Skill 899) for market tickers, leveraging vectorized PyTorch operations. The job operates statelessly by downloading `prices.db` and `forecasts.db` from a Google Cloud Storage (GCS) bucket, updating `forecasts.db` locally with new regime state probabilities and transition matrices, and uploading it back to GCS.
 
 # Architecture & Constraints
-- **Execution:** GCP Cloud Run Job triggered daily (e.g., at 02:00 CET) by Cloud Scheduler.
+- **Execution:** GCP Cloud Run Job triggered daily (e.g., at 16:57 EST/EDT, Mon-Fri) by Cloud Scheduler.
 - **Storage:** "Stateless" execution. The script MUST download `prices.db` and `forecasts.db` from a GCS bucket at startup, perform training/updates locally, and upload the updated `forecasts.db` back to GCS upon completion.
 - **Tech Stack:** Python 3.12. Strictly utilize `uv` (Skill 301) for dependency management and Docker caching. Required libraries: `torch` (Skill 323), `pandas` (Skill 327), `google-cloud-storage`, `sqlite3`.
 
@@ -45,7 +45,7 @@ flowchart TD
     classDef finish fill:#ceead6,stroke:#137333,stroke-width:2px,color:#137333;
 
     %% Workflow Nodes
-    Start([Daily Trigger 02:00 CET]) --> Scheduler[GCP Cloud Scheduler]
+    Start([Daily Trigger 16:57 EST/EDT (Mon-Fri)]) --> Scheduler[GCP Cloud Scheduler]
     Scheduler --> Job[GCP Cloud Run Job Container]
     
     %% Startup Phase

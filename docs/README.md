@@ -34,10 +34,10 @@ flowchart TB
 
     subgraph GCP Cloud Environment
         %% Schedulers
-        SyncSched[Cloud Scheduler <br> Daily 01:00 CET]:::scheduler
-        FindSched[Cloud Scheduler <br> Daily 22:00 CET]:::scheduler
-        CheckSched[Cloud Scheduler <br> Weekly Sat 19:00 CET]:::scheduler
-        TrainSched[Cloud Scheduler <br> Daily 02:00 CET]:::scheduler
+        SyncSched[Cloud Scheduler <br> Daily 16:18 EST/EDT <br> (Mon-Fri)]:::scheduler
+        FindSched[Cloud Scheduler <br> Daily 16:39 EST/EDT <br> (Mon-Fri)]:::scheduler
+        CheckSched[Cloud Scheduler <br> Weekly Sat 22:41 EST/EDT]:::scheduler
+        TrainSched[Cloud Scheduler <br> Daily 16:57 EST/EDT <br> (Mon-Fri)]:::scheduler
 
         %% Cloud Run Jobs
         SyncJob[datasync-job <br> Cloud Run Job]:::runJob
@@ -117,14 +117,14 @@ flowchart TD
 ```
 
 ### 3.1 Daily Data Synchronization (`datasync`)
-The `datasync` pipeline runs daily at 01:00 CET. Its objective is to fetch the latest market movements for the currently tracked tickers.
+The `datasync` pipeline runs daily at 16:18 EST/EDT (Monday through Friday). Its objective is to fetch the latest market movements for the currently tracked tickers.
 *   **Batching & Rate-Limiting:** To prevent API rate-limiting or IP bans from Yahoo Finance, the system batches the 1200+ active tickers into sub-groups of 200.
 *   **Incremental Fetch:** The job requests only the last 10 days of daily data (`period="10d", interval="1d"`). This window is chosen to guarantee overlap and cover extended weekends or trading holidays.
 *   **Robust Upsert:** Downloads are structured using `yfinance`. Only the `Adj Close` price is extracted, renamed to `adj_close`, and written using a SQL `INSERT OR REPLACE` query to handle index overlaps cleanly.
 *   **exponential Backoff:** Network requests are wrapped in an exponential backoff retry loop to handle intermittent gateway timeouts.
 
 ### 3.2 Daily Ticker Discovery (`findticker`)
-The `findticker` pipeline executes daily at 22:00 CET to scan for highly active market equities.
+The `findticker` pipeline executes daily at 16:39 EST/EDT (Monday through Friday) to scan for highly active market equities.
 *   **Scraping Active Equities:** The system leverages Yahoo Finance’s screener API by making authenticated requests using cookie and crumb validation. It fetches the top 20 most-active stocks across the United States, Canada, and 30+ European nations.
 *   **Strict Security & Filtering Guards:** High-volatility lists often contain debt vehicles, derivatives, and illiquid instruments. To prevent database crashes, `is_valid_equity_ticker` applies strict regex filtering rules:
     *   *Professional Segment Bonds:* Skips any symbol containing `-PRO`.
@@ -133,12 +133,12 @@ The `findticker` pipeline executes daily at 22:00 CET to scan for highly active 
 *   **MultiIndex & API Normalization:** When using bulk tickers, `yfinance` can return a nested MultiIndex DataFrame. The scraper flattens these columns by dynamically scanning for potential date candidates `['Date', 'Datetime', 'date', 'datetime']` and calling `.columns.get_level_values(0)` to maintain structural integrity.
 
 ### 3.3 Historical Backfilling (`initialdownloader`)
-Triggered weekly on Sundays at 15:00 CET, the `initialdownloader` guarantees dataset completeness.
+Triggered weekly on Sundays at 22:42 EST/EDT, the `initialdownloader` guarantees dataset completeness.
 *   **Minimum History Threshold:** The model requires a rich sample to estimate parameters. If a newly discovered ticker contains fewer than 2,000 price records, this pipeline is triggered.
 *   **Historical Query:** It requests `period="max"` via `yfinance`, extracts the most recent 2,000 dates, and upserts them into `prices.db`.
 
 ### 3.4 Weekly Health Checks (`tickerchecker`)
-Running every Saturday at 19:00 CET, the `tickerchecker` maintains database sanity.
+Running every Saturday at 22:41 EST/EDT, the `tickerchecker` maintains database sanity.
 *   **Stale Ticker Identification:** Compares tickers in `prices.db` to identify any ticker whose maximum price date is older than 3 weeks.
 *   **Verification & Removal:** Attempts to download the last 3 weeks of price data for these stale tickers. If `yfinance` returns empty records (indicating delisting, symbol renaming, or mergers), the ticker is:
     1.  Removed from the main `tickers.csv` tracking list.
@@ -338,8 +338,8 @@ The system is built on GCP using Terraform to ensure absolute reproducibility an
 *   **Cloud Run Service:** The `showresults` dashboard is deployed as an auto-scaling serverless Cloud Run Service with public ingress (`allUsers` run invoker).
 *   **Unified Service Account:** A customized IAM Service Account `trading-regime-job-sa` is granted minimal-privilege GCS object admin access (`roles/storage.objectAdmin`) and Cloud Run invocation privileges to preserve zero-trust security.
 *   **Scheduling Cron Details:**
-    *   `datasync-job` $\rightarrow$ `0 1 * * *` (Daily 01:00 CET)
-    *   `findticker-job` $\rightarrow$ `0 22 * * *` (Daily 22:00 CET)
-    *   `trainer-job` $\rightarrow$ `0 2 * * *` (Daily 02:00 CET)
-    *   `tickerchecker-job` $\rightarrow$ `0 19 * * 6` (Weekly Saturdays 19:00 CET)
-    *   `initialdownloader-job` $\rightarrow$ `0 15 * * 0` (Weekly Sundays 15:00 CET)
+    *   `datasync-job` $\rightarrow$ `18 16 * * 1-5` (Daily 16:18 EST/EDT, Mon-Fri)
+    *   `findticker-job` $\rightarrow$ `39 16 * * 1-5` (Daily 16:39 EST/EDT, Mon-Fri)
+    *   `trainer-job` $\rightarrow$ `57 16 * * 1-5` (Daily 16:57 EST/EDT, Mon-Fri)
+    *   `tickerchecker-job` $\rightarrow$ `41 22 * * 6` (Weekly Saturdays 22:41 EST/EDT)
+    *   `initialdownloader-job` $\rightarrow$ `42 22 * * 0` (Weekly Sundays 22:42 EST/EDT)
