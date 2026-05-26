@@ -32,6 +32,28 @@ resource "google_project_iam_member" "sa_cloudrun_invoker" {
   member  = "serviceAccount:${google_service_account.job_sa.email}"
 }
 
+resource "google_project_iam_member" "sa_cloudrun_viewer" {
+  project = var.project_id
+  role    = "roles/run.viewer"
+  member  = "serviceAccount:${google_service_account.job_sa.email}"
+}
+
+resource "google_project_iam_member" "sa_workflows_invoker" {
+  project = var.project_id
+  role    = "roles/workflows.invoker"
+  member  = "serviceAccount:${google_service_account.job_sa.email}"
+}
+
+resource "google_project_service" "workflows_api" {
+  service            = "workflows.googleapis.com"
+  disable_on_destroy = false
+}
+
+resource "time_sleep" "wait_for_workflows_sa" {
+  depends_on      = [google_project_service.workflows_api]
+  create_duration = "30s"
+}
+
 # 1. Data Sync (Daily)
 resource "google_cloud_run_v2_job" "datasync" {
   name     = "datasync-job"
@@ -57,22 +79,7 @@ resource "google_cloud_run_v2_job" "datasync" {
   }
 }
 
-resource "google_cloud_scheduler_job" "datasync_schedule" {
-  name        = "datasync-schedule"
-  description = "Trigger Data Sync Job Daily at 16:18 EST/EDT"
-  schedule    = "18 16 * * 1-5"
-  time_zone   = "America/New_York"
-  region      = var.region
 
-  http_target {
-    http_method = "POST"
-    uri         = "https://${var.region}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${var.project_id}/jobs/datasync-job:run"
-
-    oauth_token {
-      service_account_email = google_service_account.job_sa.email
-    }
-  }
-}
 
 # 2. Ticker Checker (Weekly Sat 19:00 CET)
 resource "google_cloud_run_v2_job" "tickerchecker" {
@@ -141,22 +148,7 @@ resource "google_cloud_run_v2_job" "findticker" {
   }
 }
 
-resource "google_cloud_scheduler_job" "findticker_schedule" {
-  name        = "findticker-schedule"
-  description = "Trigger Find Ticker Daily 16:39 EST/EDT"
-  schedule    = "39 16 * * 1-5"
-  time_zone   = "America/New_York"
-  region      = var.region
 
-  http_target {
-    http_method = "POST"
-    uri         = "https://${var.region}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${var.project_id}/jobs/findticker-job:run"
-
-    oauth_token {
-      service_account_email = google_service_account.job_sa.email
-    }
-  }
-}
 
 # 4. Initial Downloader (Sun 15:00 CET)
 resource "google_cloud_run_v2_job" "initialdownloader" {
@@ -226,16 +218,59 @@ resource "google_cloud_run_v2_job" "trainer" {
   }
 }
 
-resource "google_cloud_scheduler_job" "trainer_schedule" {
-  name        = "trainer-schedule"
-  description = "Trigger Markov Regime Trainer Job Daily at 16:57 EST/EDT"
-  schedule    = "57 16 * * 1-5"
+resource "google_workflows_workflow" "daily_pipeline" {
+  name            = "daily-pipeline-workflow"
+  region          = var.region
+  description     = "Run datasync, findticker, trainer sequentially with 30s delays"
+  service_account = google_service_account.job_sa.email
+
+  depends_on = [
+    google_project_service.workflows_api,
+    time_sleep.wait_for_workflows_sa
+  ]
+
+  source_contents = <<-EOF
+  main:
+    steps:
+      - runDatasync:
+          call: googleapis.run.v1.namespaces.jobs.run
+          args:
+            name: namespaces/${var.project_id}/jobs/${google_cloud_run_v2_job.datasync.name}
+            location: ${var.region}
+          result: datasyncResult
+      - wait30s_1:
+          call: sys.sleep
+          args:
+            seconds: 30
+      - runFindticker:
+          call: googleapis.run.v1.namespaces.jobs.run
+          args:
+            name: namespaces/${var.project_id}/jobs/${google_cloud_run_v2_job.findticker.name}
+            location: ${var.region}
+          result: findtickerResult
+      - wait30s_2:
+          call: sys.sleep
+          args:
+            seconds: 30
+      - runTrainer:
+          call: googleapis.run.v1.namespaces.jobs.run
+          args:
+            name: namespaces/${var.project_id}/jobs/${google_cloud_run_v2_job.trainer.name}
+            location: ${var.region}
+          result: trainerResult
+  EOF
+}
+
+resource "google_cloud_scheduler_job" "daily_pipeline_schedule" {
+  name        = "daily-pipeline-schedule"
+  description = "Trigger Daily Pipeline Workflow at 16:18 EST/EDT"
+  schedule    = "18 16 * * 1-5"
   time_zone   = "America/New_York"
   region      = var.region
 
   http_target {
     http_method = "POST"
-    uri         = "https://${var.region}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${var.project_id}/jobs/trainer-job:run"
+    uri         = "https://workflowexecutions.googleapis.com/v1/projects/${var.project_id}/locations/${var.region}/workflows/${google_workflows_workflow.daily_pipeline.name}/executions"
 
     oauth_token {
       service_account_email = google_service_account.job_sa.email
