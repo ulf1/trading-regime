@@ -2,14 +2,12 @@
 
 ## 1. Introduction
 
-In quantitative finance, asset return series are characterized by time-varying statistical properties. Markets undergo distinct structural shifts—alternating between periods of high-growth/low-volatility (bull markets), high-volatility/negative-growth (bear markets), and sideways congestion (neutral markets). Capturing these transitional dynamics is essential for robust risk management, asset allocation, and algorithmic trading execution.
-
-This system implements an end-to-end, enterprise-grade, cloud-native **Trading Regime Forecasting System**. It is structured as a Python-based monorepo running on **Google Cloud Platform (GCP)**. The core engine is a vectorized, three-state **Gaussian Markov Regime-Switching (MRS) model** implemented in **PyTorch**. The system automates:
+This system implements an end-to-end, cloud-native **Trading Regime Forecasting System**. It is structured as a Python-based monorepo running on **Google Cloud Platform (GCP)**. The core engine is a vectorized, three-state **Gaussian Markov Regime-Switching (MRS) model** implemented in **PyTorch**. The system automates:
 1. Daily discovery of highly active equity instruments across North America and Europe.
 2. Robust, rate-limited incremental market data ingestion and synchronization.
 3. Automated database pruning and quality-assurance health checks.
 4. Parallel model training and forecasting on high-performance serverless containers.
-5. Real-time visualization of forecasted probabilities and statistical parameters through a glassmorphic dashboard.
+5. Real-time visualization of forecasted probabilities and statistical parameters through a dashboard.
 
 Crucially, the entire infrastructure operates in a **stateless, serverless** manner. Utilizing Google Cloud Run Jobs, Cloud Scheduler, and Terraform, the system pulls data assets from Google Cloud Storage (GCS), processes them in-memory, updates local SQLite databases, and commits them back to GCS, bypassing the need for expensive persistent volumes.
 
@@ -167,9 +165,9 @@ Missing return points (e.g. from illiquid days or country-specific bank holidays
 
 ### 4.2 Model Definition
 Let $r_t \in \mathbb{R}^N$ be the log returns of $N$ assets at time $t$. We model the returns as being governed by an unobserved discrete state variable (regime) $S_t \in \{0, 1, 2\}$ representing three market conditions:
-*   State 0: **Bull Regime** (High positive mean, low volatility)
-*   State 1: **Neutral Regime** (Stable sideways mean, moderate volatility)
-*   State 2: **Bear Regime** (Negative mean, high volatility)
+*   State 0: **Bull Regime** (High positive mean)
+*   State 1: **Neutral Regime** (Stable sideways mean)
+*   State 2: **Bear Regime** (Negative mean)
 
 Conditional on the regime $S_t = j$, returns follow a Gaussian distribution:
 
