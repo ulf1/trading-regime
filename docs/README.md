@@ -70,12 +70,6 @@ flowchart TB
 
     %% Web service user traffic
     User <-->|HTTP Request / View Glassmorphic UI| WebService
-
-    class Def scheduler scheduler;
-    class Def runJob runJob;
-    class Def storage storage;
-    class Def web web;
-    class Def client client;
 ```
 
 ---
