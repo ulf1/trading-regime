@@ -32,6 +32,12 @@ resource "google_project_iam_member" "sa_cloudrun_invoker" {
   member  = "serviceAccount:${google_service_account.job_sa.email}"
 }
 
+resource "google_project_iam_member" "sa_cloudrun_viewer" {
+  project = var.project_id
+  role    = "roles/run.viewer"
+  member  = "serviceAccount:${google_service_account.job_sa.email}"
+}
+
 resource "google_project_iam_member" "sa_workflows_invoker" {
   project = var.project_id
   role    = "roles/workflows.invoker"
