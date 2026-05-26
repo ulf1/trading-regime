@@ -229,7 +229,7 @@ resource "google_workflows_workflow" "daily_pipeline" {
       - runDatasync:
           call: googleapis.run.v1.namespaces.jobs.run
           args:
-            name: namespaces/$${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}/jobs/${google_cloud_run_v2_job.datasync.name}
+            name: namespaces/${var.project_id}/jobs/${google_cloud_run_v2_job.datasync.name}
             location: ${var.region}
           result: datasyncResult
       - wait30s_1:
@@ -239,7 +239,7 @@ resource "google_workflows_workflow" "daily_pipeline" {
       - runFindticker:
           call: googleapis.run.v1.namespaces.jobs.run
           args:
-            name: namespaces/$${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}/jobs/${google_cloud_run_v2_job.findticker.name}
+            name: namespaces/${var.project_id}/jobs/${google_cloud_run_v2_job.findticker.name}
             location: ${var.region}
           result: findtickerResult
       - wait30s_2:
@@ -249,7 +249,7 @@ resource "google_workflows_workflow" "daily_pipeline" {
       - runTrainer:
           call: googleapis.run.v1.namespaces.jobs.run
           args:
-            name: namespaces/$${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}/jobs/${google_cloud_run_v2_job.trainer.name}
+            name: namespaces/${var.project_id}/jobs/${google_cloud_run_v2_job.trainer.name}
             location: ${var.region}
           result: trainerResult
   EOF
