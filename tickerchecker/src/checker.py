@@ -13,6 +13,10 @@ def check_stale_ticker(ticker: str) -> tuple[bool, pd.DataFrame]:
     try:
         data = yf.download([ticker], period="3wk", interval="1d", auto_adjust=False, threads=False, progress=False)
         
+        # Flatten MultiIndex columns immediately if present
+        if isinstance(data.columns, pd.MultiIndex):
+            data.columns = data.columns.get_level_values(0)
+
         if data.empty or 'Adj Close' not in data.columns:
             logger.warning(f"Ticker {ticker} appears to be dead (no data found).")
             return False, pd.DataFrame()
@@ -22,16 +26,11 @@ def check_stale_ticker(ticker: str) -> tuple[bool, pd.DataFrame]:
             logger.warning(f"Ticker {ticker} appears to be dead (all NaNs).")
             return False, pd.DataFrame()
             
-        ticker_df = ticker_df.reset_index()
+        # Directly extract dates from DatetimeIndex to avoid KeyError: 'Date'
+        ticker_df['date'] = pd.to_datetime(ticker_df.index).strftime('%Y-%m-%d')
         ticker_df['ticker'] = ticker
-        ticker_df['Date'] = ticker_df['Date'].dt.strftime('%Y-%m-%d')
-        ticker_df = ticker_df.rename(columns={'Date': 'date', 'Adj Close': 'adj_close'})
-        
-        # Unpack MultiIndex columns if necessary
-        if isinstance(ticker_df.columns, pd.MultiIndex):
-            ticker_df.columns = [col[0] for col in ticker_df.columns]
-            
-        return True, ticker_df
+        ticker_df = ticker_df.rename(columns={'Adj Close': 'adj_close'})
+        return True, ticker_df[['date', 'ticker', 'adj_close']]
     except Exception as e:
         logger.error(f"Error checking ticker {ticker}: {e}")
         return False, pd.DataFrame()
