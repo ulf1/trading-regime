@@ -204,11 +204,11 @@ $$\mu_{\text{bear}} \le \mu_{\text{neutral}} \le \mu_{\text{bull}}$$
 #### 4.3.2 Enforcing Volatility and Probability Constraints
 *   **Standard Deviation Constraint:** Volatility must remain positive. We optimize `raw_sigma` in the unconstrained space:
 
-$$\sigma_k = e^{\text{raw\_sigma}_k}$$
+$$\sigma_k = e^{\text{raw\\_sigma}_k}$$
 
 *   **Transition Probability Constraint:** Transition rows must sum to 1. We optimize unconstrained logit matrices `raw_trans_mat` and apply a softmax activation along the rows:
 
-$$p_{ij} = \text{softmax}(\text{raw\_trans\_mat}_{i,j}) = \frac{e^{\text{raw\_trans\_mat}_{i,j}}}{\sum_{k=0}^2 e^{\text{raw\_trans\_mat}_{i,k}}}$$
+$$p_{ij} = \text{softmax}(\text{raw\\_trans\\_mat}_{i,j}) = \frac{e^{\text{raw\\_trans\\_mat}_{i,j}}}{\sum_{k=0}^2 e^{\text{raw\\_trans\\_mat}_{i,k}}}$$
 
 ---
 
