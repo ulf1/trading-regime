@@ -47,7 +47,7 @@ flowchart TD
     classDef finish fill:#ceead6,stroke:#137333,stroke-width:2px,color:#137333;
 
     %% Workflow Nodes
-    Start([Daily Trigger 16:39 EST/EDT (Mon-Fri)]) --> Scheduler[GCP Cloud Scheduler]
+    Start(["Daily Trigger 16:39 EST/EDT (Mon-Fri)"]) --> Scheduler[GCP Cloud Scheduler]
     Scheduler --> Job[GCP Cloud Run Job Container]
     
     %% Startup Phase
@@ -68,12 +68,12 @@ flowchart TD
     AppendCSV --> LoopNew[Iterate over new tickers]
     
     %% Validation Guard Check
-    LoopNew --> GuardCheck{Is Professional Bond?\n(Contains '-PRO')}
-    GuardCheck -- Yes --> SkipT[Skip Ticker & Log Warning]:::decision
-    GuardCheck -- No --> SuffixCheck{Is Warrant, Unit,\nPreferred, or Future?}:::decision
+    LoopNew --> GuardCheck{"Is Professional Bond?\n(Contains '-PRO')"}
+    GuardCheck -- Yes --> SkipT["Skip Ticker & Log Warning"]:::decision
+    GuardCheck -- No --> SuffixCheck{"Is Warrant, Unit,\nPreferred, or Future?"}:::decision
     
     SuffixCheck -- Yes --> SkipT
-    SuffixCheck -- No --> BondPatternCheck{Does symbol have digits\nAND a hyphen? \n(eg 'BOND-12')}:::decision
+    SuffixCheck -- No --> BondPatternCheck{"Does symbol have digits\nAND a hyphen? \n(eg 'BOND-12')"}:::decision
     
     BondPatternCheck -- Yes --> SkipT
     BondPatternCheck -- No --> FetchHist[Fetch data via yfinance as string]
@@ -95,7 +95,7 @@ flowchart TD
     %% Teardown Phase
     CheckMore -- No --> UploadFiles[Upload updated tickers.csv & prices.db to GCS]
     UploadFiles --> FinalLog[Log Execution Metrics]
-    FinalLog --> End([Successful Completion])
+    FinalLog --> End(["Successful Completion"])
     TeardownClean --> End
 
     %% Class Assignments

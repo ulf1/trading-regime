@@ -44,22 +44,22 @@ flowchart TD
     classDef finish fill:#ceead6,stroke:#137333,stroke-width:2px,color:#137333;
 
     %% Workflow Nodes
-    User([User Browser]) -->|HTTP GET /| Route[Flask Route]:::trigger
+    User(["User Browser"]) -->|HTTP GET /| Route["Flask Route"]:::trigger
     
     %% Startup / Data Fetch Phase
     Route --> CheckDB{Is DB Cached & Fresh?}
-    CheckDB -- No --> DLFiles[Download forecasts.db from GCS]:::storage
+    CheckDB -- No --> DLFiles["Download forecasts.db from GCS"]:::storage
     DLFiles --> Query
-    CheckDB -- Yes --> Query[(Query SQLite Database)]:::database
+    CheckDB -- Yes --> Query[("Query SQLite Database")]:::database
     
     %% Processing Phase
-    Query --> Extract[Extract latest row per ticker\nfrom 'training_results']:::process
-    Extract --> Math[Multiply values by 100\nFormat to 1 decimal place]:::process
-    Math --> Compute[Compute difference:\nproba0 - proba2]:::process
+    Query --> Extract["Extract latest row per ticker\nfrom 'training_results'"]:::process
+    Extract --> Math["Multiply values by 100\nFormat to 1 decimal place"]:::process
+    Math --> Compute["Compute difference:\nproba0 - proba2"]:::process
     
     %% Rendering Phase
-    Compute --> Render[Render index.html Template]:::process
-    Render --> Resp[Return HTML Response with JS Search]:::finish
+    Compute --> Render["Render index.html Template"]:::process
+    Render --> Resp["Return HTML Response with JS Search"]:::finish
     Resp --> User
 ```
 

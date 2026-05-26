@@ -47,7 +47,7 @@ graph TD
     classDef finish fill:#ceead6,stroke:#137333,stroke-width:2px,color:#137333;
 
     %% Workflow Nodes
-    Start([Weekly Trigger - Sat 22:41 EST/EDT]) --> Scheduler[GCP Cloud Scheduler]
+    Start(["Weekly Trigger - Sat 22:41 EST/EDT"]) --> Scheduler[GCP Cloud Scheduler]
     Scheduler --> Job[GCP Cloud Run Job Container]
     
     %% Startup Phase
@@ -56,7 +56,7 @@ graph TD
     DLFiles --> DLDead[Download dead_tickers.csv if exists]
     
     %% Processing & Identification
-    DLDead --> QueryDB[Query DB for stale tickers > 3 weeks old]
+    DLDead --> QueryDB["Query DB for stale tickers > 3 weeks old"]
     QueryDB --> LoopTickers[Loop through stale tickers]
     
     %% Ticker Loop
@@ -80,7 +80,7 @@ graph TD
     CheckMore -- No --> VacuumDB[Run SQL VACUUM on SQLite database]
     VacuumDB --> UploadFiles[Upload prices.db, tickers.csv, dead_tickers.csv to GCS]
     UploadFiles --> FinalLog[Log Execution Metrics]
-    FinalLog --> End([Successful Completion])
+    FinalLog --> End(["Successful Completion"])
 
     %% Class Assignments
     class Start,Scheduler,Job trigger;
