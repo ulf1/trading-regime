@@ -34,22 +34,22 @@ flowchart TB
 
     subgraph GCP Cloud Environment
         %% Schedulers
-        SyncSched[Cloud Scheduler <br> Daily 16:18 EST/EDT <br> (Mon-Fri)]:::scheduler
-        FindSched[Cloud Scheduler <br> Daily 16:39 EST/EDT <br> (Mon-Fri)]:::scheduler
-        CheckSched[Cloud Scheduler <br> Weekly Sat 22:41 EST/EDT]:::scheduler
-        TrainSched[Cloud Scheduler <br> Daily 16:57 EST/EDT <br> (Mon-Fri)]:::scheduler
+        SyncSched["Cloud Scheduler <br> Daily 16:18 EST/EDT <br> (Mon-Fri)"]:::scheduler
+        FindSched["Cloud Scheduler <br> Daily 16:39 EST/EDT <br> (Mon-Fri)"]:::scheduler
+        CheckSched["Cloud Scheduler <br> Weekly Sat 22:41 EST/EDT"]:::scheduler
+        TrainSched["Cloud Scheduler <br> Daily 16:57 EST/EDT <br> (Mon-Fri)"]:::scheduler
 
         %% Cloud Run Jobs
-        SyncJob[datasync-job <br> Cloud Run Job]:::runJob
-        FindJob[findticker-job <br> Cloud Run Job]:::runJob
-        CheckJob[tickerchecker-job <br> Cloud Run Job]:::runJob
-        TrainJob[trainer-job <br> Cloud Run Job]:::runJob
+        SyncJob["datasync-job <br> Cloud Run Job"]:::runJob
+        FindJob["findticker-job <br> Cloud Run Job"]:::runJob
+        CheckJob["tickerchecker-job <br> Cloud Run Job"]:::runJob
+        TrainJob["trainer-job <br> Cloud Run Job"]:::runJob
 
         %% GCS Storage
-        GCS[(GCS Bucket <br> market_data)]:::storage
+        GCS[("GCS Bucket <br> market_data")]:::storage
         
         %% Web Service
-        WebService[showresults-service <br> Cloud Run Service]:::web
+        WebService["showresults-service <br> Cloud Run Service"]:::web
     end
 
     %% Client Layer
@@ -70,12 +70,6 @@ flowchart TB
 
     %% Web service user traffic
     User <-->|HTTP Request / View Glassmorphic UI| WebService
-
-    class Def scheduler scheduler;
-    class Def runJob runJob;
-    class Def storage storage;
-    class Def web web;
-    class Def client client;
 ```
 
 ---
@@ -93,22 +87,22 @@ flowchart TD
     classDef storage fill:#e8f0fe,stroke:#1a73e8,stroke-width:2px,color:#1967d2;
 
     %% Ingestion Steps
-    Init[Daily Trigger] --> DL[Download prices.db & tickers.csv]:::storage
+    Init["Daily Trigger"] --> DL["Download prices.db & tickers.csv"]:::storage
     
-    DL --> Find[Scrape Yahoo Screener API]:::process
-    Find --> Filter{Is valid equity ticker? \n Filter out warrants, bonds, preferreds}:::decision
+    DL --> Find["Scrape Yahoo Screener API"]:::process
+    Find --> Filter{"Is valid equity ticker? <br> Filter out warrants, bonds, preferreds"}:::decision
     
-    Filter -- Invalid --> Skip[Skip Ticker]
-    Filter -- Valid --> CheckNew{Is Ticker New?}:::decision
+    Filter -- Invalid --> Skip["Skip Ticker"]
+    Filter -- Valid --> CheckNew{"Is Ticker New?"}:::decision
     
-    CheckNew -- No --> Incremental[datasync: Fetch latest 10 days]:::process
-    CheckNew -- Yes --> Backfill[initialdownloader: Fetch max 2000 days]:::process
+    CheckNew -- No --> Incremental["datasync: Fetch latest 10 days"]:::process
+    CheckNew -- Yes --> Backfill["initialdownloader: Fetch max 2000 days"]:::process
     
-    Incremental --> Upsert[Upsert Prices DataFrame]:::database
+    Incremental --> Upsert["Upsert Prices DataFrame"]:::database
     Backfill --> Upsert
     
-    Upsert --> Vacuum[VACUUM SQLite DB]:::database
-    Vacuum --> Upload[Upload updated prices.db to GCS]:::storage
+    Upsert --> Vacuum["VACUUM SQLite DB"]:::database
+    Vacuum --> Upload["Upload updated prices.db to GCS"]:::storage
 
     class DL,Upload storage;
     class Find,Incremental,Backfill process;
@@ -204,11 +198,11 @@ $$\mu_{\text{bear}} \le \mu_{\text{neutral}} \le \mu_{\text{bull}}$$
 #### 4.3.2 Enforcing Volatility and Probability Constraints
 *   **Standard Deviation Constraint:** Volatility must remain positive. We optimize `raw_sigma` in the unconstrained space:
 
-$$\sigma_k = e^{\text{raw\_sigma}_k}$$
+$$\sigma_k = e^{\text{raw\\_sigma}_k}$$
 
 *   **Transition Probability Constraint:** Transition rows must sum to 1. We optimize unconstrained logit matrices `raw_trans_mat` and apply a softmax activation along the rows:
 
-$$p_{ij} = \text{softmax}(\text{raw\_trans\_mat}_{i,j}) = \frac{e^{\text{raw\_trans\_mat}_{i,j}}}{\sum_{k=0}^2 e^{\text{raw\_trans\_mat}_{i,k}}}$$
+$$p_{ij} = \text{softmax}(\text{raw\\_trans\\_mat}_{i,j}) = \frac{e^{\text{raw\\_trans\\_mat}_{i,j}}}{\sum_{k=0}^2 e^{\text{raw\\_trans\\_mat}_{i,k}}}$$
 
 ---
 
@@ -258,19 +252,19 @@ flowchart TD
     classDef process fill:#fef7e0,stroke:#b06000,stroke-width:2px,color:#b06000;
     classDef database fill:#e6f4ea,stroke:#137333,stroke-width:2px,color:#137333;
 
-    Init[Start daily run] --> DL[Download prices.db & forecasts.db]:::storage
+    Init["Start daily run"] --> DL["Download prices.db & forecasts.db"]:::storage
     
-    DL --> Fetch[Fetch up to 2000 price records per active ticker]:::database
-    Fetch --> LogReturns[Compute Pivot & Log Returns]:::process
+    DL --> Fetch["Fetch up to 2000 price records per active ticker"]:::database
+    Fetch --> LogReturns["Compute Pivot & Log Returns"]:::process
     
-    LogReturns --> WarmStart[Fetch last parameters from training_results <br> Warm start weights]:::database
-    WarmStart --> InitModel[Initialize PyTorch MRS Model]:::process
+    LogReturns --> WarmStart["Fetch last parameters from training_results <br> Warm start weights"]:::database
+    WarmStart --> InitModel["Initialize PyTorch MRS Model"]:::process
     
-    InitModel --> Train[Execute Vectorized Training Loop <br> Epochs=150, lr=0.05]:::process
-    Train --> Infer[Final Inference: Calculate 1-day ahead forecasts]:::process
+    InitModel --> Train["Execute Vectorized Training Loop <br> Epochs=150, lr=0.05"]:::process
+    Train --> Infer["Final Inference: Calculate 1-day ahead forecasts"]:::process
     
-    Infer --> Persist[Upsert params to training_results & complete run]:::database
-    Persist --> Upload[Upload forecasts.db back to GCS]:::storage
+    Infer --> Persist["Upsert params to training_results & complete run"]:::database
+    Persist --> Upload["Upload forecasts.db back to GCS"]:::storage
 
     class DL,Upload storage;
     class Fetch,WarmStart,Persist database;

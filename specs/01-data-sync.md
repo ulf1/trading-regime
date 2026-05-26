@@ -48,7 +48,7 @@ graph TD
     classDef finish fill:#ceead6,stroke:#137333,stroke-width:2px,color:#137333;
 
     %% Workflow Nodes
-    Start([Daily Trigger]) --> Scheduler[GCP Cloud Scheduler]
+    Start(["Daily Trigger"]) --> Scheduler[GCP Cloud Scheduler]
     Scheduler --> Job[GCP Cloud Run Job Container]
     
     %% Startup Phase
@@ -59,7 +59,7 @@ graph TD
     CheckDB -- Yes --> DLDB[Download prices.db to local disk]
     CheckDB -- No --> InitLocal[Create local prices.db & Init SQLite Schema]
     
-    DLDB --> LoadTickers[Read tickers.csv from GCS / Fallback hardcoded list]
+    DLDB --> LoadTickers["Read tickers.csv from GCS / Fallback hardcoded list"]
     InitLocal --> LoadTickers
     
     %% Processing & Batching
@@ -67,17 +67,17 @@ graph TD
     GetSyncDate --> BatchLoop[Split 1200 Tickers into Batches of 200]
     
     %% Batch Loop
-    BatchLoop --> FetchBatch[Fetch Batch from yfinance - period: 10d, interval: 1d]
+    BatchLoop --> FetchBatch["Fetch Batch from yfinance - period: 10d, interval: 1d"]
     FetchBatch --> FetchSuccess{Fetch Successful?}
     
     %% Retry logic
     FetchSuccess -- No --> RetryCheck{Retry Limit Exceeded?}
     RetryCheck -- No --> Backoff[Exponential Backoff Delay]
     Backoff --> FetchBatch
-    RetryCheck -- Yes --> LogError[Log Error & Continue Next Batch]
+    RetryCheck -- Yes --> LogError["Log Error & Continue Next Batch"]
     
     %% Data Processing & Upsert
-    FetchSuccess -- Yes --> CleanData[Extract 'Adj Close', Rename & Reshape DataFrame]
+    FetchSuccess -- Yes --> CleanData["Extract 'Adj Close', Rename & Reshape DataFrame"]
     CleanData --> DB_Upsert[Robust Upsert into SQLite prices table]
     
     LogError --> CheckMore{More Batches?}
@@ -89,7 +89,7 @@ graph TD
     CheckMore -- No --> Vacuum[Run SQL VACUUM on SQLite database]
     Vacuum --> UploadDB[Upload prices.db back to GCS Bucket]
     UploadDB --> FinalLog[Log Execution Metrics & Time Taken]
-    FinalLog --> End([Successful Completion])
+    FinalLog --> End(["Successful Completion"])
 
     %% Class Assignments
     class Start,Scheduler,Job trigger;

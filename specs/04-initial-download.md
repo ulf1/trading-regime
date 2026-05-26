@@ -38,7 +38,7 @@ graph TD
     classDef decision fill:#fce8e6,stroke:#c5221f,stroke-width:2px,color:#c5221f;
     classDef finish fill:#ceead6,stroke:#137333,stroke-width:2px,color:#137333;
 
-    Start([Scheduled Trigger - Sun 22:42 EST/EDT]) --> Scheduler[GCP Cloud Scheduler]
+    Start(["Scheduled Trigger - Sun 22:42 EST/EDT"]) --> Scheduler[GCP Cloud Scheduler]
     Scheduler --> Job[GCP Cloud Run Job Container]
     
     Job --> InitLog[Initialize Logging & GCS Client]
@@ -53,9 +53,9 @@ graph TD
     LoadTickers --> TickerLoop[Iterate through Tickers]
     
     TickerLoop --> CountPoints[Count price points for Ticker in prices.db]
-    CountPoints --> CheckCount{Count < 2000?}
+    CountPoints --> CheckCount{"Count < 2000?"}
     
-    CheckCount -- Yes --> DownloadData[Download period='max' via yfinance]
+    CheckCount -- Yes --> DownloadData["Download period='max' via yfinance"]
     CheckCount -- No --> CheckMore{More Tickers?}
     
     DownloadData --> FetchSuccess{Fetch Successful?}
@@ -65,7 +65,7 @@ graph TD
     Backoff --> DownloadData
     RetryCheck -- Yes --> LogError[Log Error]
     
-    FetchSuccess -- Yes --> CleanData[Extract 'Adj Close', Rename & Filter last 2000]
+    FetchSuccess -- Yes --> CleanData["Extract 'Adj Close', Rename & Filter last 2000"]
     CleanData --> DB_Upsert[Upsert into prices table]
     
     DB_Upsert --> CheckMore
@@ -76,7 +76,7 @@ graph TD
     
     Vacuum --> UploadDB[Upload prices.db back to GCS Bucket]
     UploadDB --> FinalLog[Log Execution Metrics & Time Taken]
-    FinalLog --> End([Successful Completion])
+    FinalLog --> End(["Successful Completion"])
 
     class Start,Scheduler,Job trigger;
     class InitLog,FinalLog startup;

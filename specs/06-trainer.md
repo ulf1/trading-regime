@@ -45,7 +45,7 @@ flowchart TD
     classDef finish fill:#ceead6,stroke:#137333,stroke-width:2px,color:#137333;
 
     %% Workflow Nodes
-    Start([Daily Trigger 16:57 EST/EDT (Mon-Fri)]) --> Scheduler[GCP Cloud Scheduler]
+    Start(["Daily Trigger 16:57 EST/EDT (Mon-Fri)"]) --> Scheduler[GCP Cloud Scheduler]
     Scheduler --> Job[GCP Cloud Run Job Container]
     
     %% Startup Phase
@@ -56,28 +56,28 @@ flowchart TD
     
     %% Training Trigger Check
     DLFiles --> GetDates[Query latest date from prices.db & forecasts.db]
-    GetDates --> CheckTrigger{Is last_data_dt > \n last_run_dt + 1 day?}
+    GetDates --> CheckTrigger{"Is last_data_dt > \n last_run_dt + 1 day?"}
     
-    CheckTrigger -- No --> TeardownClean[Log 'No new data to train' & Exit]
+    CheckTrigger -- No --> TeardownClean["Log 'No new data to train' & Exit"]
     
     %% Data Preparation
-    CheckTrigger -- Yes --> UpdateRunStatus[Insert running status into training_runs]
-    UpdateRunStatus --> PrepData[Select tickers w/ last_data_dt]
-    PrepData --> FetchHist[Fetch last 2000 days for active tickers]:::database
-    FetchHist --> Transform[Pivot table, log diff, impute 0 for missing]:::process
+    CheckTrigger -- Yes --> UpdateRunStatus["Insert running status into training_runs"]
+    UpdateRunStatus --> PrepData["Select tickers w/ last_data_dt"]
+    PrepData --> FetchHist["Fetch last 2000 days for active tickers"]:::database
+    FetchHist --> Transform["Pivot table, log diff, impute 0 for missing"]:::process
     
     %% Modeling
-    Transform --> LoadParams[Load previous model params from training_results]:::database
-    LoadParams --> InitModel[Instantiate PyTorch MRS Model (3 states)]:::process
-    InitModel --> TrainModel[Execute Vectorized Training Loop]:::process
-    TrainModel --> ExtractParams[Extract new params, transition matrices, regime probs]
+    Transform --> LoadParams["Load previous model params from training_results"]:::database
+    LoadParams --> InitModel["Instantiate PyTorch MRS Model (3 states)"]:::process
+    InitModel --> TrainModel["Execute Vectorized Training Loop"]:::process
+    TrainModel --> ExtractParams["Extract new params, transition matrices, regime probs"]
     
     %% Save & Upload
-    ExtractParams --> DB_Insert[Upsert results into training_results]:::database
-    DB_Insert --> UpdateComplete[Update status=Completed in training_runs]:::database
-    UpdateComplete --> UploadFiles[Upload updated forecasts.db to GCS]:::storage
-    UploadFiles --> FinalLog[Log Execution Metrics]
-    FinalLog --> End([Successful Completion])
+    ExtractParams --> DB_Insert["Upsert results into training_results"]:::database
+    DB_Insert --> UpdateComplete["Update status=Completed in training_runs"]:::database
+    UpdateComplete --> UploadFiles["Upload updated forecasts.db to GCS"]:::storage
+    UploadFiles --> FinalLog["Log Execution Metrics"]
+    FinalLog --> End(["Successful Completion"])
     TeardownClean --> End
 
     %% Class Assignments
