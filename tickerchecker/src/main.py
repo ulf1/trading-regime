@@ -1,4 +1,3 @@
-from scraper import get_market_cap_usd
 import os
 import time
 import logging
