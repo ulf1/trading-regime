@@ -78,7 +78,7 @@ def get_latest_forecasts(db_path: str = None) -> list[dict]:
     query = """
     WITH RankedResults AS (
         SELECT 
-            current_date,
+            training_results.current_date,
             ticker,
             nll,
             raw_mu_0, raw_mu_1, raw_mu_2,
@@ -87,9 +87,10 @@ def get_latest_forecasts(db_path: str = None) -> list[dict]:
             last_price_value,
             ROW_NUMBER() OVER (PARTITION BY ticker ORDER BY last_price_date DESC) as rn
         FROM training_results
+        WHERE nll < -5000.0
     )
     SELECT 
-        current_date,
+        RankedResults.current_date,
         ticker,
         nll,
         raw_mu_0, raw_mu_1, raw_mu_2,
@@ -145,7 +146,7 @@ def get_latest_forecasts(db_path: str = None) -> list[dict]:
             results.append({
                 "ticker": row["ticker"],
                 "current_date": row["current_date"],
-                "nll": round(nll, 4) if nll is not None else None,
+                "nll": round(nll, 0) if nll is not None else None,
                 "mu_0": formatted_mu0,
                 "mu_1": formatted_mu1,
                 "mu_2": formatted_mu2,

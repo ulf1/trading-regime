@@ -4,7 +4,7 @@ import logging
 import pandas as pd
 from google.cloud import storage
 from database import get_stale_tickers, delete_ticker, upsert_prices, vacuum_db
-from checker import check_stale_ticker
+from checker import check_stale_ticker, get_market_cap_usd
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -61,13 +61,18 @@ def main():
         active_tickers = []
         
     for ticker in stale_tickers:
+        # kick out tickers with less than 250M market cap
+        market_cap = get_market_cap_usd(ticker)
+
+        # check if still new price points come in
         is_alive, df = check_stale_ticker(ticker)
         
-        if not is_alive:
-            logger.info(f"Removing dead ticker: {ticker}")
+        if (not is_alive) or (market_cap < 2e9):
+            reason = "yfinance no data" if not is_alive else f"market cap {market_cap/1e9:.1f}B"
+            logger.info(f"Removing ticker: {ticker} ({reason})")
             if ticker in active_tickers:
                 active_tickers.remove(ticker)
-            dead_tickers.append({"ticker": ticker, "reason": "yfinance no data"})
+            dead_tickers.append({"ticker": ticker, "reason": reason})
             delete_ticker(DB_NAME, ticker)
         else:
             logger.info(f"Ticker {ticker} is alive, upserting missing data.")

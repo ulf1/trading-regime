@@ -99,7 +99,7 @@ def main():
     
     # 2. Query last dates and verify trigger logic
     last_data_dt = get_latest_prices_date(PRICES_DB)
-    last_run_dt = get_latest_training_date(FORECASTS_DB) # canbe None on first run
+    last_run_dt = get_latest_training_date(FORECASTS_DB) # can be None on first run
     
     logger.info(f"Latest prices date (last_data_dt): {last_data_dt}")
     logger.info(f"Latest completed training date (last_run_dt): {last_run_dt}")
@@ -111,12 +111,11 @@ def main():
         logger.info("No previous training run found. Proceeding with training.")
     else: 
         try:
-            # Check trigger: last_data_dt > last_run_dt + 1 day
+            # Check trigger: last_data_dt > last_run_dt
             dt_data = datetime.strptime(last_data_dt, "%Y-%m-%d")
             dt_run = datetime.strptime(last_run_dt, "%Y-%m-%d")
-            delta = dt_data - dt_run
-            if delta.days <= 1:
-                logger.info("Trigger condition not met (last_data_dt is not > last_run_dt + 1 day). Exiting cleanly.")
+            if dt_data <= dt_run:
+                logger.info("Trigger condition not met (last_data_dt == last_run_dt). Exiting cleanly.")
                 return
         except ValueError as e:
             logger.error(f"Error parsing dates: {e}. Proceeding with training anyway.")

@@ -22,43 +22,43 @@ REGIONS = [
     "at",   # Austria 
     "ch",   # Switzerland
     "pt",   # Portugal (Euronext)
-    # "ie",   # Ireland (Euronext)
-    # "lu",   # Luxembourg
-    # "mc",   # Monaco
+    "ie",   # Ireland (Euronext)
+    "lu",   # Luxembourg
+    "mc",   # Monaco
 
     # Northern Europe
-    # "se",   # Sweden (Nasdaq Nordic)
-    # "no",   # Norway (Euronext)
-    # "dk",   # Denmark (Nasdaq Nordic)
-    # "fi",   # Finland (Nasdaq Nordic)
-    # "is",   # Iceland (Nasdaq Nordic)
+    "se",   # Sweden (Nasdaq Nordic)
+    "no",   # Norway (Euronext)
+    "dk",   # Denmark (Nasdaq Nordic)
+    "fi",   # Finland (Nasdaq Nordic)
+    "is",   # Iceland (Nasdaq Nordic)
 
     # Eastern Europe
-    # "pl",   # Poland
-    # "cz",   # Czech Republic
-    # "sk",   # Slovakia
-    # "hu",   # Hungary
-    # "ro",   # Romania
-    # "bg",   # Bulgaria
-    # "hr",   # Croatia
-    # "si",   # Slovenia
-    # "ee",   # Estonia (Nasdaq Baltic)
-    # "lv",   # Latvia (Nasdaq Baltic)
-    # "lt",   # Lithuania (Nasdaq Baltic)
+    "pl",   # Poland
+    "cz",   # Czech Republic
+    "sk",   # Slovakia
+    "hu",   # Hungary
+    "ro",   # Romania
+    "bg",   # Bulgaria
+    "hr",   # Croatia
+    "si",   # Slovenia
+    "ee",   # Estonia (Nasdaq Baltic)
+    "lv",   # Latvia (Nasdaq Baltic)
+    "lt",   # Lithuania (Nasdaq Baltic)
 
     # Southern / Southeastern Europe
-    # "gr",   # Greece (Euronext)
-    # "cy",   # Cyprus
-    # "mt",   # Malta
-    # "rs",   # Serbia
-    # "ba",   # Bosnia and Herzegovina
-    # "me",   # Montenegro
-    # "mk",   # North Macedonia
-    # "al",   # Albania
-    # "tr",   # Turkey
+    "gr",   # Greece (Euronext)
+    "cy",   # Cyprus
+    "mt",   # Malta
+    "rs",   # Serbia
+    "ba",   # Bosnia and Herzegovina
+    "me",   # Montenegro
+    "mk",   # North Macedonia
+    "al",   # Albania
+    "tr",   # Turkey
 
     # Other European
-    # "ua",   # Ukraine
+    "ua",   # Ukraine
 ]
 
 HEADERS = {
@@ -150,6 +150,40 @@ def is_valid_equity_ticker(ticker: str) -> bool:
         
     return True
 
+
+def get_market_cap_usd(symbol: str) -> float:
+    """
+    Return a company's market cap in USD using yfinance.
+    
+    Example:
+        get_market_cap_usd("AAPL")
+        get_market_cap_usd("SAP.DE")
+    """
+
+    ticker = yf.Ticker(symbol)
+    info = ticker.info
+
+    market_cap = info.get("marketCap")
+    currency = info.get("currency")
+
+    if market_cap is None:
+        raise ValueError(f"No market cap available for {symbol}")
+
+    # Already USD
+    if currency == "USD":
+        return float(market_cap)
+
+    # Convert to USD using FX rate
+    fx_pair = f"{currency}USD=X"
+
+    try:
+        fx_rate = yf.Ticker(fx_pair).history(period="1d")["Close"].iloc[-1]
+    except Exception:
+        raise ValueError(f"Could not fetch FX rate for {currency}->USD")
+
+    return float(market_cap * fx_rate)
+
+
 def fetch_historical_data(ticker: str) -> pd.DataFrame:
     """
     Fetches historical adjusted close prices for a ticker using yfinance.
@@ -157,6 +191,12 @@ def fetch_historical_data(ticker: str) -> pd.DataFrame:
     """
     if not is_valid_equity_ticker(ticker):
         logger.info(f"Skipping non-equity ticker: {ticker}")
+        return pd.DataFrame()
+
+    logger.info(f"Fetching market cap for {ticker}...")
+    market_cap = get_market_cap_usd(ticker)
+    if market_cap < 2e9:
+        logger.info(f"Skipping {ticker} with market cap {market_cap} (less than 250M USD)")
         return pd.DataFrame()
 
     logger.info(f"Fetching historical data for {ticker}...")

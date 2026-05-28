@@ -22,7 +22,8 @@
                 <span class="logo-pulse"></span>
                 <h1>Trading Regime Forecasts</h1>
             </div>
-            <p class="subtitle">Real-time vectorized Markov Regime-Switching forecasts (Daily Autograd Retraining)</p>
+            <p class="subtitle">Daily Autograd Retrained vectorized Markov Regime-Switching forecasts -
+                only +2bn market cap and +8 years data history</p>
         </header>
 
         <!-- Stats Overview Row -->
@@ -74,12 +75,12 @@
                         <th onclick="sortTable(2, 'number')">Mu0 (Bull) % <span class="sort-indicator"></span></th>
                         <th onclick="sortTable(3, 'number')">Mu1 (Neut) % <span class="sort-indicator"></span></th>
                         <th onclick="sortTable(4, 'number')">Mu2 (Bear) % <span class="sort-indicator"></span></th>
-                        <th onclick="sortTable(5, 'number')">Proba0 % <span class="sort-indicator"></span></th>
-                        <th onclick="sortTable(6, 'number')">Proba1 % <span class="sort-indicator"></span></th>
-                        <th onclick="sortTable(7, 'number')">Proba2 % <span class="sort-indicator"></span></th>
-                        <th onclick="sortTable(8, 'number')">EV % <span class="sort-indicator"></span></th>
-                        <th onclick="sortTable(9, 'number')" class="sort-active-desc">Proba0 - Proba2 <span
+                        <th onclick="sortTable(5, 'number')">P0 % <span class="sort-indicator"></span></th>
+                        <th onclick="sortTable(6, 'number')">P1 % <span class="sort-indicator"></span></th>
+                        <th onclick="sortTable(7, 'number')">P2 % <span class="sort-indicator"></span></th>
+                        <th onclick="sortTable(8, 'number')" class="sort-active-desc">EV % <span
                                 class="sort-indicator desc"></span></th>
+                        <th onclick="sortTable(9, 'number')">P0-P2 <span class="sort-indicator"></span></th>
                         <th onclick="sortTable(10, 'string')">Last Data Date <span class="sort-indicator"></span></th>
                     </tr>
                 </thead>
@@ -96,16 +97,15 @@
                         <td class="number-col">{{ f.proba_2 if f.proba_2 is not none else '—' }}%</td>
                         <td class="number-col font-bold">
                             {% if f.expected_return is not none %}
-                                {% if f.expected_return > 0.0 %}
-                                    <span class="text-bull">+{{ f.expected_return }}%</span>
-                                {% elif f.expected_return < 0.0 %}
-                                    <span class="text-bear">{{ f.expected_return }}%</span>
+                            {% if f.expected_return > 0.0 %}
+                            <span class="text-bull">+{{ f.expected_return }}%</span>
+                            {% elif f.expected_return < 0.0 %} <span class="text-bear">{{ f.expected_return }}%</span>
                                 {% else %}
-                                    <span class="text-neutral">0.0%</span>
+                                <span class="text-neutral">0.0%</span>
                                 {% endif %}
-                            {% else %}
+                                {% else %}
                                 —
-                            {% endif %}
+                                {% endif %}
                         </td>
                         <td class="number-col font-bold">
                             {% if f.proba_spread is not none %}
@@ -164,8 +164,8 @@
         // 2. Client-Side Interactive Column Sorting Logic
         let sortDirections = {};
 
-        // Initialize default descending sort on 'Proba0 - Proba2' column (index 9)
-        sortDirections[9] = 'desc';
+        // Initialize default descending sort on 'Expected Value' column (index 8)
+        sortDirections[8] = 'desc';
 
         function sortTable(columnIndex, type) {
             const currentDir = sortDirections[columnIndex] === 'asc' ? 'desc' : 'asc';

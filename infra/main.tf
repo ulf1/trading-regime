@@ -199,7 +199,7 @@ resource "google_cloud_run_v2_job" "trainer" {
 
   template {
     template {
-      timeout = "1200s" # 20 minutes
+      timeout = "7200s" # 2 hour
       containers {
         image = "${var.region}-docker.pkg.dev/${var.project_id}/${var.artifact_registry_repo}/trainer:latest"
         env {
@@ -208,8 +208,8 @@ resource "google_cloud_run_v2_job" "trainer" {
         }
         resources {
           limits = {
-            memory = "4Gi"
-            cpu    = "2"
+            memory = "8Gi"
+            cpu    = "4"
           }
         }
       }

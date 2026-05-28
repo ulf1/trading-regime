@@ -148,7 +148,7 @@ def occupancy_prior(
 
 def transition_persistence_penalty(
     model: MarkovRegimeSwitching,
-    lam: float = 1000.0
+    lam: float = 100.0   # the value must be relative to NLL (4-5 digits)
 ) -> torch.Tensor:
     """
     Calculates a penalty to encourage high diagonal entries in the transition matrix,
@@ -156,7 +156,7 @@ def transition_persistence_penalty(
 
     This matches:
         [
-        \text{loss} = \frac{1}{n}\sum_i \max(0, 0.95 - p_{ii})^2
+        \text{loss} = \frac{1}{n}\sum_i \max(0, 0.8 - p_{ii})^2
         ]
     """
     _, _, trans_mat = model.get_constrained_params()
@@ -164,19 +164,23 @@ def transition_persistence_penalty(
     # Sum of diagonal elements for each series
     persistence = torch.diagonal(trans_mat, dim1=1, dim2=2)
     
-    # Penalty if diagonal is less than 0.95
-    return lam * (torch.clamp(0.95 - persistence, min=0) ** 2).mean()
+    # Penalty if diagonal is less than 0.8 (i.e. proba of at least 5 days staying in the regime)
+    return lam * (torch.clamp(0.8 - persistence, min=0) ** 2).mean()
 
 
 def regime_volatility_penalty(
     model: MarkovRegimeSwitching,
-    lam: float = 100.0
+    lam: float = 50.0
 ) -> torch.Tensor:
     """
     Penalizes the difference in volatility between regimes.
+    - bull regime is around 0.75x of neutral regime
+    - bear regime is around 2.0x of neutral regime
     """
     _, sigma, _ = model.get_constrained_params()
-    return lam * ((sigma[:, 0] - sigma[:, 1]) ** 2 + (sigma[:, 2] - sigma[:, 1]) ** 2).mean()
+    return lam * (
+        (sigma[:, 0] - 0.75 * sigma[:, 1]) ** 2 + (sigma[:, 2] - 2.0 * sigma[:, 1]) ** 2
+    ).mean()
 
 
 def train_mrs_model(
