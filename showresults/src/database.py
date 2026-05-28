@@ -78,7 +78,7 @@ def get_latest_forecasts(db_path: str = None) -> list[dict]:
     query = """
     WITH RankedResults AS (
         SELECT 
-            current_date,
+            training_results.current_date,
             ticker,
             nll,
             raw_mu_0, raw_mu_1, raw_mu_2,
@@ -90,7 +90,7 @@ def get_latest_forecasts(db_path: str = None) -> list[dict]:
         WHERE nll < -5000.0
     )
     SELECT 
-        current_date,
+        RankedResults.current_date,
         ticker,
         nll,
         raw_mu_0, raw_mu_1, raw_mu_2,

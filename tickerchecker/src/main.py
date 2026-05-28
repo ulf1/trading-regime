@@ -67,8 +67,8 @@ def main():
         # check if still new price points come in
         is_alive, df = check_stale_ticker(ticker)
         
-        if (not is_alive) or (market_cap < 250e6):
-            reason = "yfinance no data" if not is_alive else f"market cap {market_cap/1e6:.0f}M"
+        if (not is_alive) or (market_cap < 2e9):
+            reason = "yfinance no data" if not is_alive else f"market cap {market_cap/1e9:.1f}B"
             logger.info(f"Removing ticker: {ticker} ({reason})")
             if ticker in active_tickers:
                 active_tickers.remove(ticker)

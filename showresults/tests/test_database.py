@@ -44,12 +44,12 @@ def temp_forecasts_db(tmp_path):
     import math
     data = [
         # Older AAPL run: mu_bear=-0.002, mu_neutral=0.0, mu_bull=0.001
-        ("2026-05-24", "AAPL", 10.5, -0.002, math.log(0.002), math.log(0.001), 0.1, 0.2, 0.3, 0.8, 0.1, 0.1, 0.1, 0.8, 0.1, 0.1, 0.1, 0.8, 2000, "2026-05-24", 150.0, 0.8, 0.1, 0.1),
+        ("2026-05-24", "AAPL", -5500.0, -0.002, math.log(0.002), math.log(0.001), 0.1, 0.2, 0.3, 0.8, 0.1, 0.1, 0.1, 0.8, 0.1, 0.1, 0.1, 0.8, 2000, "2026-05-24", 150.0, 0.8, 0.1, 0.1),
         # Newer AAPL run: mu_bear=-0.003, mu_neutral=0.0, mu_bull=0.002 (should be fetched)
-        ("2026-05-25", "AAPL", 9.8, -0.003, math.log(0.003), math.log(0.002), 0.1, 0.2, 0.3, 0.8, 0.1, 0.1, 0.1, 0.8, 0.1, 0.1, 0.1, 0.8, 2000, "2026-05-25", 152.5, 0.85, 0.1, 0.05),
+        ("2026-05-25", "AAPL", -6000.0, -0.003, math.log(0.003), math.log(0.002), 0.1, 0.2, 0.3, 0.8, 0.1, 0.1, 0.1, 0.8, 0.1, 0.1, 0.1, 0.8, 2000, "2026-05-25", 152.5, 0.85, 0.1, 0.05),
         
         # MSFT: mu_bear=-0.001, mu_neutral=0.001, mu_bull=0.005 (only one run)
-        ("2026-05-25", "MSFT", 22.4, -0.001, math.log(0.002), math.log(0.004), 0.1, 0.2, 0.3, 0.8, 0.1, 0.1, 0.1, 0.8, 0.1, 0.1, 0.1, 0.8, 2000, "2026-05-25", 305.0, 0.7, 0.2, 0.1),
+        ("2026-05-25", "MSFT", -5800.0, -0.001, math.log(0.002), math.log(0.004), 0.1, 0.2, 0.3, 0.8, 0.1, 0.1, 0.1, 0.8, 0.1, 0.1, 0.1, 0.8, 2000, "2026-05-25", 305.0, 0.7, 0.2, 0.1),
     ]
     
     cursor.executemany("""
@@ -76,7 +76,7 @@ def test_get_latest_forecasts(temp_forecasts_db):
     # Verify AAPL is the latest row (current_date is 2026-05-25, not 2026-05-24)
     aapl = res_map["AAPL"]
     assert aapl["current_date"] == "2026-05-25"
-    assert aapl["nll"] == 9.8
+    assert aapl["nll"] == -6000.0
     assert aapl["last_price_value"] == 152.50
     
     # Verify math scaling (* 100) and rounding to 1 decimal place:
@@ -98,7 +98,7 @@ def test_get_latest_forecasts(temp_forecasts_db):
     # Verify MSFT values
     msft = res_map["MSFT"]
     assert msft["current_date"] == "2026-05-25"
-    assert msft["nll"] == 22.4
+    assert msft["nll"] == -5800.0
     assert msft["mu_0"] == 0.5
     assert msft["proba_spread"] == 60.0 # (0.7 - 0.1) * 100 = 60.0
     # expected return: (0.7 * 0.005 + 0.2 * 0.001 + 0.1 * -0.001) * 100 = 0.36 -> 0.4

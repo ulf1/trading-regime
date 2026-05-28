@@ -22,6 +22,8 @@ def index():
     
     # Retrieve formatted forecasts from local SQLite db
     forecasts = get_latest_forecasts()
+    # Sort forecasts by expected_return descending, putting None values at the bottom
+    forecasts.sort(key=lambda x: x["expected_return"] if x["expected_return"] is not None else -float('inf'), reverse=True)
     logger.info(f"Retrieved {len(forecasts)} forecasts for rendering.")
     
     # Compute active metrics for the header stats card

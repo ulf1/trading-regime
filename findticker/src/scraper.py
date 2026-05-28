@@ -22,43 +22,43 @@ REGIONS = [
     "at",   # Austria 
     "ch",   # Switzerland
     "pt",   # Portugal (Euronext)
-    # "ie",   # Ireland (Euronext)
-    # "lu",   # Luxembourg
-    # "mc",   # Monaco
+    "ie",   # Ireland (Euronext)
+    "lu",   # Luxembourg
+    "mc",   # Monaco
 
     # Northern Europe
-    # "se",   # Sweden (Nasdaq Nordic)
-    # "no",   # Norway (Euronext)
-    # "dk",   # Denmark (Nasdaq Nordic)
-    # "fi",   # Finland (Nasdaq Nordic)
-    # "is",   # Iceland (Nasdaq Nordic)
+    "se",   # Sweden (Nasdaq Nordic)
+    "no",   # Norway (Euronext)
+    "dk",   # Denmark (Nasdaq Nordic)
+    "fi",   # Finland (Nasdaq Nordic)
+    "is",   # Iceland (Nasdaq Nordic)
 
     # Eastern Europe
-    # "pl",   # Poland
-    # "cz",   # Czech Republic
-    # "sk",   # Slovakia
-    # "hu",   # Hungary
-    # "ro",   # Romania
-    # "bg",   # Bulgaria
-    # "hr",   # Croatia
-    # "si",   # Slovenia
-    # "ee",   # Estonia (Nasdaq Baltic)
-    # "lv",   # Latvia (Nasdaq Baltic)
-    # "lt",   # Lithuania (Nasdaq Baltic)
+    "pl",   # Poland
+    "cz",   # Czech Republic
+    "sk",   # Slovakia
+    "hu",   # Hungary
+    "ro",   # Romania
+    "bg",   # Bulgaria
+    "hr",   # Croatia
+    "si",   # Slovenia
+    "ee",   # Estonia (Nasdaq Baltic)
+    "lv",   # Latvia (Nasdaq Baltic)
+    "lt",   # Lithuania (Nasdaq Baltic)
 
     # Southern / Southeastern Europe
-    # "gr",   # Greece (Euronext)
-    # "cy",   # Cyprus
-    # "mt",   # Malta
-    # "rs",   # Serbia
-    # "ba",   # Bosnia and Herzegovina
-    # "me",   # Montenegro
-    # "mk",   # North Macedonia
-    # "al",   # Albania
-    # "tr",   # Turkey
+    "gr",   # Greece (Euronext)
+    "cy",   # Cyprus
+    "mt",   # Malta
+    "rs",   # Serbia
+    "ba",   # Bosnia and Herzegovina
+    "me",   # Montenegro
+    "mk",   # North Macedonia
+    "al",   # Albania
+    "tr",   # Turkey
 
     # Other European
-    # "ua",   # Ukraine
+    "ua",   # Ukraine
 ]
 
 HEADERS = {
@@ -195,7 +195,7 @@ def fetch_historical_data(ticker: str) -> pd.DataFrame:
 
     logger.info(f"Fetching market cap for {ticker}...")
     market_cap = get_market_cap_usd(ticker)
-    if market_cap < 250e6:
+    if market_cap < 2e9:
         logger.info(f"Skipping {ticker} with market cap {market_cap} (less than 250M USD)")
         return pd.DataFrame()
 
