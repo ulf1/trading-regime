@@ -199,7 +199,7 @@ resource "google_cloud_run_v2_job" "trainer" {
 
   template {
     template {
-      timeout = "3600s" # 1 hour
+      timeout = "7200s" # 2 hour
       containers {
         image = "${var.region}-docker.pkg.dev/${var.project_id}/${var.artifact_registry_repo}/trainer:latest"
         env {
