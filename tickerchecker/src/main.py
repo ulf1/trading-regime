@@ -1,3 +1,4 @@
+from scraper import get_market_cap_usd
 import os
 import time
 import logging
@@ -61,13 +62,18 @@ def main():
         active_tickers = []
         
     for ticker in stale_tickers:
+        # kick out tickers with less than 250M market cap
+        market_cap = get_market_cap_usd(ticker)
+
+        # check if still new price points come in
         is_alive, df = check_stale_ticker(ticker)
         
-        if not is_alive:
-            logger.info(f"Removing dead ticker: {ticker}")
+        if (not is_alive) or (market_cap < 250e6):
+            reason = "yfinance no data" if not is_alive else f"market cap {market_cap/1e6:.0f}M"
+            logger.info(f"Removing ticker: {ticker} ({reason})")
             if ticker in active_tickers:
                 active_tickers.remove(ticker)
-            dead_tickers.append({"ticker": ticker, "reason": "yfinance no data"})
+            dead_tickers.append({"ticker": ticker, "reason": reason})
             delete_ticker(DB_NAME, ticker)
         else:
             logger.info(f"Ticker {ticker} is alive, upserting missing data.")

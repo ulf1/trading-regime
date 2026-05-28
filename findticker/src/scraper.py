@@ -150,6 +150,40 @@ def is_valid_equity_ticker(ticker: str) -> bool:
         
     return True
 
+
+def get_market_cap_usd(symbol: str) -> float:
+    """
+    Return a company's market cap in USD using yfinance.
+    
+    Example:
+        get_market_cap_usd("AAPL")
+        get_market_cap_usd("SAP.DE")
+    """
+
+    ticker = yf.Ticker(symbol)
+    info = ticker.info
+
+    market_cap = info.get("marketCap")
+    currency = info.get("currency")
+
+    if market_cap is None:
+        raise ValueError(f"No market cap available for {symbol}")
+
+    # Already USD
+    if currency == "USD":
+        return float(market_cap)
+
+    # Convert to USD using FX rate
+    fx_pair = f"{currency}USD=X"
+
+    try:
+        fx_rate = yf.Ticker(fx_pair).history(period="1d")["Close"].iloc[-1]
+    except Exception:
+        raise ValueError(f"Could not fetch FX rate for {currency}->USD")
+
+    return float(market_cap * fx_rate)
+
+
 def fetch_historical_data(ticker: str) -> pd.DataFrame:
     """
     Fetches historical adjusted close prices for a ticker using yfinance.
@@ -157,6 +191,12 @@ def fetch_historical_data(ticker: str) -> pd.DataFrame:
     """
     if not is_valid_equity_ticker(ticker):
         logger.info(f"Skipping non-equity ticker: {ticker}")
+        return pd.DataFrame()
+
+    logger.info(f"Fetching market cap for {ticker}...")
+    market_cap = get_market_cap_usd(ticker)
+    if market_cap < 250e6:
+        logger.info(f"Skipping {ticker} with market cap {market_cap} (less than 250M USD)")
         return pd.DataFrame()
 
     logger.info(f"Fetching historical data for {ticker}...")
