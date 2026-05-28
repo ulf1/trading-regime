@@ -5,7 +5,7 @@ import logging
 import pandas as pd
 from google.cloud import storage
 from database import get_stale_tickers, delete_ticker, upsert_prices, vacuum_db
-from checker import check_stale_ticker
+from checker import check_stale_ticker, get_market_cap_usd
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
