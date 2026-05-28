@@ -87,6 +87,7 @@ def get_latest_forecasts(db_path: str = None) -> list[dict]:
             last_price_value,
             ROW_NUMBER() OVER (PARTITION BY ticker ORDER BY last_price_date DESC) as rn
         FROM training_results
+        WHERE nll < -5000.0
     )
     SELECT 
         current_date,
