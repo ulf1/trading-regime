@@ -1,6 +1,9 @@
+import logging
 import torch
 import torch.nn as nn
 from typing import Tuple, List
+
+logger = logging.getLogger(__name__)
 
 class MarkovRegimeSwitching(nn.Module):
     """
@@ -186,7 +189,7 @@ def regime_volatility_penalty(
 def train_mrs_model(
     model: MarkovRegimeSwitching, 
     y: torch.Tensor, 
-    epochs: int = 150, 
+    epochs: int = 100, 
     lr: float = 0.05,
 ) -> Tuple[MarkovRegimeSwitching, List[float]]:
     """
@@ -227,5 +230,12 @@ def train_mrs_model(
         optimizer.step()
         
         losses.append(loss.item())
+        
+        if epoch % 20 == 0 or epoch == epochs - 1:
+            logger.info(
+                f"Epoch {epoch:03d}/{epochs:03d} | Loss: {loss.item():.4f} | "
+                f"NLL: {nll.item():.4f} | Occ Penalty: {penalty_occ.item():.4f} | "
+                f"Pers Penalty: {penalty_pers.item():.4f} | Vol Penalty: {penalty_vol.item():.4f}"
+            )
         
     return model, losses
