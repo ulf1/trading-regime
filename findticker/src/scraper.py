@@ -194,9 +194,13 @@ def fetch_historical_data(ticker: str) -> pd.DataFrame:
         return pd.DataFrame()
 
     logger.info(f"Fetching market cap for {ticker}...")
-    market_cap = get_market_cap_usd(ticker)
-    if market_cap < 2e9:
-        logger.info(f"Skipping {ticker} with market cap {market_cap} (less than 250M USD)")
+    try:
+        market_cap = get_market_cap_usd(ticker)
+        if market_cap < 2e9:
+            logger.info(f"Skipping {ticker} with market cap {market_cap} (less than 250M USD)")
+            return pd.DataFrame()
+    except Exception as e:
+        logger.error(f"Error fetching market cap for {ticker}: {e}")
         return pd.DataFrame()
 
     logger.info(f"Fetching historical data for {ticker}...")
