@@ -62,7 +62,11 @@ def main():
         
     for ticker in stale_tickers:
         # kick out tickers with less than 250M market cap
-        market_cap = get_market_cap_usd(ticker)
+        try:
+            market_cap = get_market_cap_usd(ticker)
+        except Exception as e:
+            logger.warning(f"Error fetching market cap for {ticker}: {e}")
+            market_cap = 0.0
 
         # check if still new price points come in
         is_alive, df = check_stale_ticker(ticker)

@@ -52,7 +52,8 @@ def get_market_cap_usd(symbol: str) -> float:
     currency = info.get("currency")
 
     if market_cap is None:
-        raise ValueError(f"No market cap available for {symbol}")
+        logger.warning(f"No market cap available for {symbol}")
+        return 0.0
 
     # Already USD
     if currency == "USD":
@@ -64,6 +65,7 @@ def get_market_cap_usd(symbol: str) -> float:
     try:
         fx_rate = yf.Ticker(fx_pair).history(period="1d")["Close"].iloc[-1]
     except Exception:
-        raise ValueError(f"Could not fetch FX rate for {currency}->USD")
+        logger.warning(f"Could not fetch FX rate for {currency}->USD")
+        return 0.0
 
     return float(market_cap * fx_rate)
