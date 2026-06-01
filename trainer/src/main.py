@@ -63,6 +63,12 @@ def warm_start_model(model: MarkovRegimeSwitching, tickers: list[str], previous_
         for idx, ticker in enumerate(tickers):
             if ticker in previous_params:
                 params = previous_params[ticker]
+                
+                if any(v is None for k, v in params.items() if k != 'transition_matrix') or \
+                   any(v is None for row in params.get('transition_matrix', []) for v in row):
+                    logger.warning(f"Incomplete parameters found for {ticker}. Skipping warm start.")
+                    continue
+
                 # raw_mu: (N, K)
                 # raw_sigma: (N, K)
                 # raw_trans_mat: (N, K, K)
