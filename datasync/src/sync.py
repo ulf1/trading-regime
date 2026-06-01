@@ -15,7 +15,7 @@ def fetch_batch_data(tickers: List[str], period: str = "10d", interval: str = "1
         try:
             logger.info(f"Fetching data for batch of {len(tickers)} tickers, attempt {attempt + 1}")
             # group_by="ticker" ensures reliable multi-ticker downloads
-            data = yf.download(tickers, period=period, interval=interval, group_by="ticker", auto_adjust=False, threads=False, progress=False)
+            data = yf.download(tickers, period=period, interval=interval, group_by="ticker", auto_adjust=False, threads=True, progress=False)
             
             if data.empty:
                 logger.warning("No data downloaded for batch.")
@@ -52,7 +52,7 @@ def fetch_batch_data(tickers: List[str], period: str = "10d", interval: str = "1
             return final_df
             
         except Exception as e:
-            logger.error(f"Error fetching batch: {e}")
+            logger.error(f"Error fetching batch (type: {type(e).__name__}): {e}")
             if attempt < max_retries - 1:
                 backoff_time = 2 ** attempt
                 logger.info(f"Retrying in {backoff_time} seconds...")

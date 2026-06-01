@@ -34,37 +34,27 @@ def upload_file_to_gcs(bucket_name: str, source_file_name: str, destination_blob
     blob.upload_from_filename(source_file_name)
     logger.info(f"Uploaded {source_file_name} to {destination_blob_name}.")
 
-def main():
-    start_time = time.time()
-    logger.info("Starting Data Sync Job")
-    
-    bucket_name = os.environ.get("GCS_BUCKET_NAME")
-    if not bucket_name:
-        logger.error("GCS_BUCKET_NAME environment variable not set. Exiting.")
-        return
-
-    # Attempt to download existing DB
-    db_exists = download_file_from_gcs(bucket_name, DB_NAME, DB_NAME)
-    
-    # Initialize local SQLite DB schema
-    init_db(DB_NAME)
-    
-    # Read tickers list
+def load_tickers(bucket_name: str) -> list[str]:
+    """Downloads and reads the tickers CSV from GCS, with a local fallback."""
     tickers = []
     if download_file_from_gcs(bucket_name, CSV_NAME, CSV_NAME):
         try:
             tickers_df = pd.read_csv(CSV_NAME, header=None)
             tickers = tickers_df[0].tolist()
+        except pd.errors.ParserError as e:
+            logger.error(f"CSV Parser error reading {CSV_NAME}: {e}")
+        except OSError as e:
+            logger.error(f"OS error reading {CSV_NAME}: {e}")
         except Exception as e:
-            logger.error(f"Error reading {CSV_NAME}: {e}")
+            logger.error(f"Unexpected error reading {CSV_NAME}: {e}")
     
     if not tickers:
         logger.info("Using fallback hardcoded ticker list for testing.")
         tickers = ["AAPL", "MSFT", "GOOGL"]
-        
-    logger.info(f"Loaded {len(tickers)} tickers to process.")
-    
-    # Split into batches
+    return tickers
+
+def process_tickers(tickers: list[str]) -> int:
+    """Processes tickers in batches, fetching and upserting data."""
     batches = split_into_batches(tickers, batch_size=200)
     total_upserted = 0
     
@@ -78,6 +68,29 @@ def main():
             logger.info(f"Upserted {len(df)} rows.")
         else:
             logger.info("No data fetched for this batch.")
+    return total_upserted
+
+def main():
+    start_time = time.time()
+    logger.info("Starting Data Sync Job")
+    
+    bucket_name = os.environ.get("GCS_BUCKET_NAME")
+    if not bucket_name:
+        logger.error("GCS_BUCKET_NAME environment variable not set. Exiting.")
+        return
+
+    # Attempt to download existing DB
+    download_file_from_gcs(bucket_name, DB_NAME, DB_NAME)
+    
+    # Initialize local SQLite DB schema
+    init_db(DB_NAME)
+    
+    # Read tickers list
+    tickers = load_tickers(bucket_name)
+    logger.info(f"Loaded {len(tickers)} tickers to process.")
+    
+    # Process batches
+    total_upserted = process_tickers(tickers)
             
     # Cleanup and optimize DB
     logger.info("Vacuuming database...")
