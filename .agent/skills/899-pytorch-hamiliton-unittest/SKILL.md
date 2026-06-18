@@ -1,5 +1,5 @@
 ---
-name: pytorch_hamiliton_unittest
+name: 899-pytorch-hamiliton-unittest
 description: High-performance unit testing suite for the vectorized PyTorch Markov Regime-Switching (MRS) model and Hamilton Filter. Validates tensor shapes, reparameterization constraints, and regime alignment sorting using Pytest.
 tags:
   - python

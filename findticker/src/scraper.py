@@ -167,7 +167,8 @@ def get_market_cap_usd(symbol: str) -> float:
     currency = info.get("currency")
 
     if market_cap is None:
-        raise ValueError(f"No market cap available for {symbol}")
+        logger.warning(f"No market cap available for {symbol}")
+        return 0.0
 
     # Already USD
     if currency == "USD":
@@ -179,7 +180,8 @@ def get_market_cap_usd(symbol: str) -> float:
     try:
         fx_rate = yf.Ticker(fx_pair).history(period="1d")["Close"].iloc[-1]
     except Exception:
-        raise ValueError(f"Could not fetch FX rate for {currency}->USD")
+        logger.warning(f"Could not fetch FX rate for {currency}->USD")
+        return 0.0
 
     return float(market_cap * fx_rate)
 
@@ -194,9 +196,13 @@ def fetch_historical_data(ticker: str) -> pd.DataFrame:
         return pd.DataFrame()
 
     logger.info(f"Fetching market cap for {ticker}...")
-    market_cap = get_market_cap_usd(ticker)
-    if market_cap < 2e9:
-        logger.info(f"Skipping {ticker} with market cap {market_cap} (less than 250M USD)")
+    try:
+        market_cap = get_market_cap_usd(ticker)
+        if market_cap < 2e9:
+            logger.info(f"Skipping {ticker} with market cap {market_cap} (less than 250M USD)")
+            return pd.DataFrame()
+    except Exception as e:
+        logger.warning(f"Error fetching market cap for {ticker}: {e}")
         return pd.DataFrame()
 
     logger.info(f"Fetching historical data for {ticker}...")

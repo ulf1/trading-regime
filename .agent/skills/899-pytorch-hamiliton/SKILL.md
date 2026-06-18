@@ -1,5 +1,5 @@
 ---
-name: pytorch_hamiliton
+name: 899-pytorch-hamiliton
 description: High-performance vectorized Markov Regime-Switching (MRS) model engineering in PyTorch. Expert instructions for implementing batched Hamilton Filters, handling mathematical constraints (exponential/softmax transformations), and solving the regime label-switching problem.
 tags:
   - python

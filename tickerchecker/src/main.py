@@ -32,6 +32,57 @@ def upload_file_to_gcs(bucket_name: str, source_file_name: str, destination_blob
     blob.upload_from_filename(source_file_name)
     logger.info(f"Uploaded {source_file_name}.")
 
+def load_active_tickers() -> list[str]:
+    """Reads active tickers from TICKERS_CSV safely."""
+    active_tickers = []
+    try:
+        if os.path.exists(TICKERS_CSV):
+            active_tickers = pd.read_csv(TICKERS_CSV, header=None)[0].tolist()
+    except pd.errors.ParserError as e:
+        logger.error(f"CSV Parser error reading {TICKERS_CSV}: {e}")
+    except OSError as e:
+        logger.error(f"OS error reading {TICKERS_CSV}: {e}")
+    except Exception as e:
+        logger.error(f"Unexpected error reading {TICKERS_CSV}: {e}")
+    return active_tickers
+
+def check_and_update_stale_tickers(stale_tickers: list[str], active_tickers: list[str]) -> list[dict]:
+    """Inspects stale tickers, removes dead ones, and upserts data for alive ones."""
+    dead_tickers = []
+    for ticker in stale_tickers:
+        try:
+            market_cap = get_market_cap_usd(ticker)
+        except Exception as e:
+            logger.warning(f"Error fetching market cap for {ticker}: {e}")
+            market_cap = 0.0
+
+        is_alive, df = check_stale_ticker(ticker)
+        
+        if (not is_alive) or (market_cap < 2e9):
+            reason = "yfinance no data" if not is_alive else f"market cap {market_cap/1e9:.1f}B"
+            logger.info(f"Removing ticker: {ticker} ({reason})")
+            if ticker in active_tickers:
+                active_tickers.remove(ticker)
+            dead_tickers.append({"ticker": ticker, "reason": reason})
+            delete_ticker(DB_NAME, ticker)
+        else:
+            logger.info(f"Ticker {ticker} is alive, upserting missing data.")
+            upsert_prices(DB_NAME, df)
+    return dead_tickers
+
+def save_dead_tickers(dead_tickers: list[dict]):
+    """Saves new dead tickers to DEAD_TICKERS_CSV, preserving existing ones."""
+    if not dead_tickers:
+        return
+    dead_df = pd.DataFrame(dead_tickers)
+    try:
+        if os.path.exists(DEAD_TICKERS_CSV):
+            existing_dead_df = pd.read_csv(DEAD_TICKERS_CSV)
+            dead_df = pd.concat([existing_dead_df, dead_df], ignore_index=True)
+        dead_df.to_csv(DEAD_TICKERS_CSV, index=False)
+    except Exception as e:
+        logger.error(f"Error updating dead tickers list: {e}")
+
 def main():
     start_time = time.time()
     logger.info("Starting Ticker Checker Job")
@@ -49,46 +100,14 @@ def main():
     stale_tickers = get_stale_tickers(DB_NAME)
     logger.info(f"Found {len(stale_tickers)} stale tickers.")
     
-    dead_tickers = []
-    
-    # Read tickers.csv
-    try:
-        active_tickers = []
-        if os.path.exists(TICKERS_CSV):
-            active_tickers = pd.read_csv(TICKERS_CSV, header=None)[0].tolist()
-    except Exception as e:
-        logger.error(f"Error reading {TICKERS_CSV}: {e}")
-        active_tickers = []
-        
-    for ticker in stale_tickers:
-        # kick out tickers with less than 250M market cap
-        market_cap = get_market_cap_usd(ticker)
-
-        # check if still new price points come in
-        is_alive, df = check_stale_ticker(ticker)
-        
-        if (not is_alive) or (market_cap < 2e9):
-            reason = "yfinance no data" if not is_alive else f"market cap {market_cap/1e9:.1f}B"
-            logger.info(f"Removing ticker: {ticker} ({reason})")
-            if ticker in active_tickers:
-                active_tickers.remove(ticker)
-            dead_tickers.append({"ticker": ticker, "reason": reason})
-            delete_ticker(DB_NAME, ticker)
-        else:
-            logger.info(f"Ticker {ticker} is alive, upserting missing data.")
-            upsert_prices(DB_NAME, df)
+    active_tickers = load_active_tickers()
+    dead_tickers = check_and_update_stale_tickers(stale_tickers, active_tickers)
             
     # Save active tickers
     if active_tickers:
         pd.Series(active_tickers).to_csv(TICKERS_CSV, index=False, header=False)
         
-    # Append to dead_tickers.csv
-    if dead_tickers:
-        dead_df = pd.DataFrame(dead_tickers)
-        if os.path.exists(DEAD_TICKERS_CSV):
-            existing_dead_df = pd.read_csv(DEAD_TICKERS_CSV)
-            dead_df = pd.concat([existing_dead_df, dead_df], ignore_index=True)
-        dead_df.to_csv(DEAD_TICKERS_CSV, index=False)
+    save_dead_tickers(dead_tickers)
         
     logger.info("Vacuuming database...")
     vacuum_db(DB_NAME)

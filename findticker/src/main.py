@@ -33,6 +33,41 @@ def upload_file_to_gcs(bucket_name: str, source_file_name: str, destination_blob
     blob.upload_from_filename(source_file_name)
     logger.info(f"Uploaded {source_file_name}.")
 
+def load_existing_tickers() -> set[str]:
+    """Reads existing tickers from TICKERS_CSV, handling errors securely."""
+    existing_tickers = set()
+    if os.path.exists(TICKERS_CSV):
+        try:
+            existing_tickers = set(pd.read_csv(TICKERS_CSV, header=None)[0].tolist())
+        except pd.errors.ParserError as e:
+            logger.error(f"CSV Parser error reading {TICKERS_CSV}: {e}")
+        except OSError as e:
+            logger.error(f"OS error reading {TICKERS_CSV}: {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error reading {TICKERS_CSV}: {e}")
+    return existing_tickers
+
+def discover_tickers(existing_tickers: set[str]) -> list[str]:
+    """Scrapes new tickers and mixes them with sample of defaults."""
+    scraped_tickers = scrape_new_tickers(top_n=50)
+    logger.info(f"Scraped {len(scraped_tickers)} most active tickers.")
+    
+    new_tickers = [t for t in scraped_tickers if t not in existing_tickers]
+    tmp = [t for t in DEFAULT_TICKERS if t not in existing_tickers]
+    if len(tmp) > 0:
+        new_tickers = new_tickers + random.sample(tmp, k=min(100, len(tmp)))
+    return list(set(new_tickers))
+
+def process_new_tickers(new_tickers: list[str], existing_tickers: set[str]):
+    """Fetches historical data and inserts it into database if criteria met."""
+    for ticker in new_tickers:
+        df = fetch_historical_data(ticker)
+        if len(df) >= 2000:
+            insert_initial_data(DB_NAME, df)
+            existing_tickers.add(ticker)
+        else:
+            logger.info(f"Ticker {ticker} has less than 2000 data points. Not added to the database.")
+
 def main():
     start_time = time.time()
     logger.info("Starting Find Ticker Job")
@@ -47,21 +82,8 @@ def main():
     
     init_db(DB_NAME)
     
-    existing_tickers = set()
-    if os.path.exists(TICKERS_CSV):
-        try:
-            existing_tickers = set(pd.read_csv(TICKERS_CSV, header=None)[0].tolist())
-        except Exception as e:
-            logger.error(f"Error reading {TICKERS_CSV}: {e}")
-            
-    scraped_tickers = scrape_new_tickers(top_n=50) # Increased to 50 for better discovery
-    logger.info(f"Scraped {len(scraped_tickers)} most active tickers.")
-    
-    new_tickers = [t for t in scraped_tickers if t not in existing_tickers]
-    tmp = [t for t in DEFAULT_TICKERS if t not in existing_tickers]
-    if len(tmp) > 0:
-        new_tickers = new_tickers + random.sample(tmp, k=min(100, len(tmp)))
-    new_tickers = list(set(new_tickers))
+    existing_tickers = load_existing_tickers()
+    new_tickers = discover_tickers(existing_tickers)
     
     if not new_tickers:
         logger.info("No new tickers discovered. Exiting cleanly.")
@@ -69,13 +91,7 @@ def main():
         
     logger.info(f"Discovered {len(new_tickers)} new tickers: {new_tickers}")
     
-    for ticker in new_tickers:
-        df = fetch_historical_data(ticker)
-        if len(df) >= 2000:
-            insert_initial_data(DB_NAME, df)
-            existing_tickers.add(ticker)
-        else:
-            logger.info(f"Ticker {ticker} has less than 2000 data points. Not added to the database.")
+    process_new_tickers(new_tickers, existing_tickers)
             
     # Save updated tickers.csv
     pd.Series(list(existing_tickers)).to_csv(TICKERS_CSV, index=False, header=False)
